@@ -1,5 +1,4 @@
 use item::Item;
-// TODO: use git submodules for iced
 use purchased_item::PurchasedItem;
 
 mod item;
@@ -159,7 +158,7 @@ impl Application for App {
 
         column![col, items_list]
             .padding(20)
-            .width(Length::Units(400))
+            .width(Length::Fill)
             .align_items(Alignment::Center)
             .into()
     }
@@ -167,6 +166,10 @@ impl Application for App {
     fn subscription(&self) -> Subscription<Message> {
         events().map(Message::EventOccured)
     }
+
+    // fn style(&self) -> <Self::Theme as iced::application::StyleSheet>::Style {
+    //     <Self::Theme as iced::application::StyleSheet>::Style::default()
+    // }
 }
 
 fn get_total_price(items: &Vec<PurchasedItem>) -> u32 {

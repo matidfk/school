@@ -2,7 +2,7 @@ use std::vec;
 
 use iced::{
     alignment::{Horizontal, Vertical},
-    widget::{button, column, container, row, text},
+    widget::{button, row, text},
     Alignment, Element, Length,
 };
 
