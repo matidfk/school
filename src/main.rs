@@ -1,3 +1,4 @@
+use item::Item;
 // TODO: use git submodules for iced
 use purchased_item::PurchasedItem;
 
@@ -10,7 +11,7 @@ use iced::{
     keyboard::KeyCode,
     subscription::events,
     widget::{column, scrollable, text, text_input, Column},
-    Alignment, Application, Command, Element, Event, Settings, Subscription, Theme,
+    Alignment, Application, Command, Element, Event, Length, Settings, Subscription, Theme,
 };
 
 use crate::item_db::ItemDB;
@@ -40,6 +41,9 @@ impl Default for App {
 pub enum Message {
     EventOccured(Event),
     InputChanged(String),
+    // TODO: use index instead i guess
+    IncrementCount(Item),
+    DecrementCount(Item),
 }
 
 impl Application for App {
@@ -87,7 +91,7 @@ impl Application for App {
                                         if let Some(mut found_item) = self
                                             .purchased_items
                                             .iter_mut()
-                                            .find(|i| item.clone() == i.item)
+                                            .find(|i| item == &i.item)
                                         {
                                             found_item.quantity += 1;
                                         // else add as new
@@ -106,6 +110,21 @@ impl Application for App {
                 },
                 _ => {}
             },
+            Message::IncrementCount(item) => {
+                self.purchased_items
+                    .iter_mut()
+                    .find(|i| item == i.item)
+                    .unwrap()
+                    .quantity += 1
+            }
+            Message::DecrementCount(item) => {
+                let item = self
+                    .purchased_items
+                    .iter_mut()
+                    .find(|i| item == i.item)
+                    .unwrap();
+                item.quantity -= 1;
+            }
         }
         Command::none()
     }
@@ -127,15 +146,22 @@ impl Application for App {
             .padding(20)
             .align_items(Alignment::Center);
 
-        let items: Element<Message> = column(
+        let items_list: Element<Message> = column(
             self.purchased_items
                 .iter()
                 .map(|item| item.render())
                 .collect(),
         )
+        .width(Length::Fill)
+        .align_items(Alignment::Fill)
+        .spacing(20)
         .into();
 
-        column![col, scrollable(items)].padding(20).into()
+        column![col, items_list]
+            .padding(20)
+            .width(Length::Units(400))
+            .align_items(Alignment::Center)
+            .into()
     }
 
     fn subscription(&self) -> Subscription<Message> {
