@@ -10,7 +10,7 @@ use iced::{
     executor,
     keyboard::KeyCode,
     subscription::events,
-    widget::{column, scrollable, text, text_input, Column},
+    widget::{column, text, text_input, Column},
     Alignment, Application, Command, Element, Event, Length, Settings, Subscription, Theme,
 };
 

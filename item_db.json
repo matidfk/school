@@ -1,16 +1,19 @@
 {
-  "items": {
-    "1": {
+  "items": [
+    {
+      "code": 1,
       "name": "pica",
       "price": 1000
     },
-    "2": {
+    {
+      "code": 2,
       "name": "pica (used)",
       "price": 200
     },
-    "3": {
+    {
+      "code": 3,
       "name": "nadezdussy",
       "price": 9999
     }
-  }
+  ]
 }
