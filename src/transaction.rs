@@ -1,6 +1,6 @@
 use iced::{
     alignment::{Horizontal, Vertical},
-    widget::{button, column, row, text},
+    widget::{button, column, container, image, image::Handle, row, text, text_input},
     Alignment, Element, Length, Renderer,
 };
 
@@ -26,26 +26,69 @@ impl TransactionItem {
     }
 
     fn render(&self) -> Element<Message, Renderer<MyTheme>> {
-        row(vec![
-            text(format!(
-                "{} £{} x{}",
-                self.item.name, self.item.price, self.quantity
-            ))
-            .vertical_alignment(Vertical::Center)
-            .horizontal_alignment(Horizontal::Center)
-            .width(Length::FillPortion(8))
+        // TODO: add price
+        //
+        // |---------------------------------|
+        // | | IMG |           |-----------| |
+        // | | IMG | ITEM_NAME | + | 0 | - | |
+        // | | IMG |           |-----------| |
+        // |---------------------------------|
+
+        const ITEM_HEIGHT: u16 = 80;
+        const NO_IMAGE_PATH: &str = "_none.jpg";
+        container(row(vec![
+            // IMG
+            image(Handle::from_path(format!(
+                "./images/{}",
+                self.item
+                    .image_path
+                    .clone()
+                    .unwrap_or(NO_IMAGE_PATH.to_string())
+            )))
+            .height(Length::Fill)
             .into(),
-            button(text("+").horizontal_alignment(Horizontal::Center))
-                .on_press(Message::IncrementCount(self.item.clone()))
-                .width(Length::FillPortion(1))
+            // ITEM_NAME
+            text(&self.item.name)
+                .width(Length::Fill)
+                .horizontal_alignment(Horizontal::Center)
+                .vertical_alignment(Vertical::Center)
                 .into(),
-            button(text("-").horizontal_alignment(Horizontal::Center))
+            // BUTTONS
+            row(vec![
+                // -
+                button(
+                    text("-")
+                        .height(Length::Fill)
+                        .vertical_alignment(Vertical::Center),
+                )
                 .on_press(Message::DecrementCount(self.item.clone()))
-                .width(Length::FillPortion(1))
+                .height(Length::Fill)
+                .padding(20)
                 .into(),
-        ])
-        .width(Length::Fill)
-        .align_items(Alignment::Fill)
+                // count
+                text(&self.quantity.to_string())
+                    .height(Length::Fill)
+                    .vertical_alignment(Vertical::Center)
+                    .into(),
+                // +
+                button(
+                    text("+")
+                        .height(Length::Fill)
+                        .vertical_alignment(Vertical::Center),
+                )
+                .on_press(Message::IncrementCount(self.item.clone()))
+                .height(Length::Fill)
+                .padding(20)
+                .into(),
+            ])
+            .width(Length::Shrink)
+            .align_items(Alignment::Center)
+            .height(Length::Fill)
+            .spacing(20)
+            .into(),
+        ]))
+        .height(Length::Units(ITEM_HEIGHT))
+        .center_y()
         .into()
     }
 }

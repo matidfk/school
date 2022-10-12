@@ -20,6 +20,19 @@ use crate::item_db::ItemDB;
 pub fn main() -> iced::Result {
     App::run(Settings::default())
 }
+// pub fn main() {
+
+//     let mut item_db = ItemDB::load("./item_db.json");
+
+//     item_db.items.push(Item {
+//         code: 69,
+//         name: "hahahaha".to_owned(),
+//         price: 20,
+//         image_path: Some("apple.png".to_owned()),
+//     });
+
+//     item_db.save("./item_db.json");
+// }
 
 // setup model
 struct App {

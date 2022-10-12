@@ -4,6 +4,10 @@ use iced::{
     Background, Color,
 };
 
+
+const BACKGROUND: Color = Color::from_rgb(1.0, 1.0, 1.0);
+const TEXT_COLOR: Color = Color::from_rgb(0.0, 0.0, 0.0);
+
 #[derive(Default, Clone, Copy)]
 pub struct MyTheme;
 
@@ -12,8 +16,8 @@ impl application::StyleSheet for MyTheme {
 
     fn appearance(&self, _style: Self::Style) -> application::Appearance {
         application::Appearance {
-            background_color: Color::from_rgb(0.8, 0.9, 0.3),
-            text_color: Color::BLACK,
+            background_color: BACKGROUND,
+            text_color: TEXT_COLOR,
         }
     }
 }

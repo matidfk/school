@@ -2,23 +2,33 @@
   "items": [
     {
       "code": 1,
-      "name": "pica",
-      "price": 1000
+      "name": "poo",
+      "price": 1000,
+      "image_path": null
     },
     {
       "code": 2,
-      "name": "pica (used)",
-      "price": 200
+      "name": "small poo",
+      "price": 200,
+      "image_path": null
     },
     {
       "code": 3,
-      "name": "nadezdussy",
-      "price": 9999
+      "name": "a very     big poo innit",
+      "price": 9999,
+      "image_path": null
     },
     {
       "code": 4,
       "name": "gillussy",
-      "price": 99999
+      "price": 99999,
+      "image_path": null
+    },
+    {
+      "code": 69,
+      "name": "hahahaha",
+      "price": 20,
+      "image_path": "apple.png"
     }
   ]
 }

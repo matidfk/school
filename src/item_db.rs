@@ -1,8 +1,7 @@
+use serde::{Deserialize, Serialize};
 use std::fs;
-use serde::{Serialize, Deserialize};
 
 use crate::item::Item;
-
 
 // TODO: maybe load into a hashmap for performance
 
@@ -21,5 +20,10 @@ impl ItemDB {
     pub fn get_item(&self, code: u64) -> Option<&Item> {
         self.items.iter().find(|item| item.code == code)
         // self.items.get(&barcode)
+    }
+
+    pub fn save(&self, path: &str) {
+        // serde_json::from_str::<Self>(&string).expect("Couldn't deserialize file")
+        fs::write(path, serde_json::to_string_pretty::<Self>(self).expect("Couldn't serialize Item Database"));
     }
 }
