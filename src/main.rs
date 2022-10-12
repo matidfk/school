@@ -1,19 +1,19 @@
 use item::Item;
-use purchased_item::PurchasedItem;
 use theme::MyTheme;
 
 mod item;
 mod item_db;
-mod purchased_item;
 mod theme;
+mod transaction;
 
 use iced::{
     executor,
     keyboard::KeyCode,
     subscription::events,
-    widget::{column, text, text_input, Button, Column, Text},
+    widget::{column, text, text_input, Column},
     Alignment, Application, Command, Element, Event, Length, Renderer, Settings, Subscription,
 };
+use transaction::Transaction;
 
 use crate::item_db::ItemDB;
 
@@ -24,7 +24,7 @@ pub fn main() -> iced::Result {
 // setup model
 struct App {
     item_db: ItemDB,
-    purchased_items: Vec<PurchasedItem>,
+    current_transaction: Transaction,
     input_value: String,
 }
 
@@ -32,8 +32,8 @@ impl Default for App {
     fn default() -> Self {
         Self {
             item_db: ItemDB::load("./item_db.json"),
-            purchased_items: Default::default(),
             input_value: Default::default(),
+            current_transaction: Default::default(),
         }
     }
 }
@@ -67,7 +67,7 @@ impl Application for App {
             Message::EventOccured(event) => match event {
                 Event::Keyboard(event) => match event {
                     iced::keyboard::Event::CharacterReceived(char) => {
-                        // add if number
+                        // add only if number
                         if char.is_numeric() {
                             self.input_value.push(char);
                         }
@@ -80,29 +80,20 @@ impl Application for App {
                         if key_code == KeyCode::Enter {
                             if !self.input_value.is_empty() {
                                 // get number in input
-                                let barcode =
-                                    self.input_value.parse().expect("Couldn't parse number");
+                                let code = self.input_value.parse().expect("Couldn't parse number");
                                 // get corresponding item
-                                let item = self.item_db.get_item(barcode);
+                                let item = self.item_db.get_item(code);
 
-                                // add to transaction
-                                match item {
-                                    Some(item) => {
-                                        // if list contains item, add to quantity
-                                        if let Some(mut found_item) = self
-                                            .purchased_items
-                                            .iter_mut()
-                                            .find(|i| item == &i.item)
-                                        {
-                                            found_item.quantity += 1;
-                                        // else add as new
-                                        } else {
-                                            self.purchased_items
-                                                .push(PurchasedItem::new(item.clone()));
-                                        }
-                                    }
-                                    None => println!("invalid item {}", self.input_value),
+                                // if item is found
+                                if let Some(item) = item {
+                                    // add to transaction
+                                    self.current_transaction.add_item(item)
+                                } else {
+                                    // print error message
+                                    println!("invalid item {}", self.input_value)
                                 }
+
+                                // clear input
                                 self.input_value.clear();
                             }
                         }
@@ -112,19 +103,10 @@ impl Application for App {
                 _ => {}
             },
             Message::IncrementCount(item) => {
-                self.purchased_items
-                    .iter_mut()
-                    .find(|i| item == i.item)
-                    .unwrap()
-                    .quantity += 1
+                self.current_transaction.modify_quantity(&item, 1);
             }
             Message::DecrementCount(item) => {
-                let item = self
-                    .purchased_items
-                    .iter_mut()
-                    .find(|i| item == i.item)
-                    .unwrap();
-                item.quantity -= 1;
+                self.current_transaction.modify_quantity(&item, -1);
             }
         }
         Command::none()
@@ -135,7 +117,7 @@ impl Application for App {
             .push(
                 text(format!(
                     "Total Price: £{}",
-                    get_total_price(&self.purchased_items)
+                    self.current_transaction.total_price()
                 ))
                 .size(50),
             )
@@ -147,36 +129,18 @@ impl Application for App {
             .padding(20)
             .align_items(Alignment::Center);
 
-        let items_list: Element<Self::Message, Renderer<Self::Theme>> = column(
-            self.purchased_items
-                .iter()
-                .map(|item| item.render())
-                .collect(),
-        )
-        .width(Length::Fill)
-        .align_items(Alignment::Fill)
-        .spacing(20)
-        .into();
-
-            column![col, items_list]
-                .padding(20)
-                .width(Length::Fill)
-                .align_items(Alignment::Center)
-                .into()
-
-    }
-
-    fn subscription(&self) -> Subscription<Message> {
-        events().map(Message::EventOccured)
+        column![col, self.current_transaction.render()]
+            .padding(20)
+            .width(Length::Fill)
+            .align_items(Alignment::Fill)
+            .into()
     }
 
     fn theme(&self) -> Self::Theme {
         Self::Theme::default()
     }
-}
 
-fn get_total_price(items: &Vec<PurchasedItem>) -> u32 {
-    items.iter().fold(0, |sum, item| {
-        sum + (item.item.price * item.quantity as u32)
-    })
+    fn subscription(&self) -> Subscription<Message> {
+        events().map(Message::EventOccured)
+    }
 }
