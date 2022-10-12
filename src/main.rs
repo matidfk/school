@@ -1,16 +1,18 @@
 use item::Item;
 use purchased_item::PurchasedItem;
+use theme::MyTheme;
 
 mod item;
 mod item_db;
 mod purchased_item;
+mod theme;
 
 use iced::{
     executor,
     keyboard::KeyCode,
     subscription::events,
-    widget::{column, text, text_input, Column},
-    Alignment, Application, Command, Element, Event, Length, Settings, Subscription, Theme,
+    widget::{column, text, text_input, Button, Column, Text},
+    Alignment, Application, Command, Element, Event, Length, Renderer, Settings, Subscription,
 };
 
 use crate::item_db::ItemDB;
@@ -48,7 +50,7 @@ pub enum Message {
 impl Application for App {
     type Executor = executor::Default;
     type Message = Message;
-    type Theme = Theme;
+    type Theme = MyTheme;
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
@@ -128,8 +130,8 @@ impl Application for App {
         Command::none()
     }
 
-    fn view(&self) -> Element<'_, Message> {
-        let col = Column::new()
+    fn view(&self) -> Element<Self::Message, Renderer<Self::Theme>> {
+        let col: Column<Self::Message, Renderer<Self::Theme>> = Column::new()
             .push(
                 text(format!(
                     "Total Price: £{}",
@@ -145,7 +147,7 @@ impl Application for App {
             .padding(20)
             .align_items(Alignment::Center);
 
-        let items_list: Element<Message> = column(
+        let items_list: Element<Self::Message, Renderer<Self::Theme>> = column(
             self.purchased_items
                 .iter()
                 .map(|item| item.render())
@@ -156,20 +158,21 @@ impl Application for App {
         .spacing(20)
         .into();
 
-        column![col, items_list]
-            .padding(20)
-            .width(Length::Fill)
-            .align_items(Alignment::Center)
-            .into()
+            column![col, items_list]
+                .padding(20)
+                .width(Length::Fill)
+                .align_items(Alignment::Center)
+                .into()
+
     }
 
     fn subscription(&self) -> Subscription<Message> {
         events().map(Message::EventOccured)
     }
 
-    // fn style(&self) -> <Self::Theme as iced::application::StyleSheet>::Style {
-    //     <Self::Theme as iced::application::StyleSheet>::Style::default()
-    // }
+    fn theme(&self) -> Self::Theme {
+        Self::Theme::default()
+    }
 }
 
 fn get_total_price(items: &Vec<PurchasedItem>) -> u32 {
