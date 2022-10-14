@@ -1,40 +1,43 @@
 use iced::{
     application,
-    theme::{Application, Button, Container, Text},
     widget::{button, container, text, text_input},
     Background, Color,
 };
+
+const BACKGROUND: Color = Color::from_rgb(1.0, 1.0, 1.0);
+const TEXT_COLOR: Color = Color::from_rgb(0.0, 0.0, 0.0);
+const ACCENT: Color = Color::from_rgb(0.8, 0.2, 0.2);
 
 #[derive(Default, Clone, Copy)]
 pub struct MyTheme;
 
 impl application::StyleSheet for MyTheme {
-    type Style = Application;
+    type Style = ();
 
-    fn appearance(&self, style: Self::Style) -> application::Appearance {
+    fn appearance(&self, _style: Self::Style) -> application::Appearance {
         application::Appearance {
-            background_color: Color::from_rgb(0.8, 0.9, 0.3),
-            text_color: Color::BLACK,
+            background_color: BACKGROUND,
+            text_color: TEXT_COLOR,
         }
     }
 }
 
 impl button::StyleSheet for MyTheme {
-    type Style = Button;
-    fn active(&self, style: Self::Style) -> button::Appearance {
+    type Style = ();
+    fn active(&self, _style: Self::Style) -> button::Appearance {
         button::Appearance {
-            background: Some(Background::Color(Color::from_rgb(1.0, 0.4, 0.6))),
+            background: Some(Background::Color(ACCENT)),
             ..Default::default()
         }
     }
 }
 
 impl container::StyleSheet for MyTheme {
-    type Style = Container;
-    fn appearance(&self, style: Self::Style) -> container::Appearance {
+    type Style = ();
+    fn appearance(&self, _style: Self::Style) -> container::Appearance {
         container::Appearance {
             // text_color: (),
-            background: Some(Background::Color(Color::from_rgb(0.5, 0.5, 0.5))),
+            background: Some(Background::Color(Color::from_rgb(0.9, 0.9, 0.9))),
             // border_radius: (),
             border_width: 2.0,
             border_color: Color::BLACK,
@@ -44,9 +47,9 @@ impl container::StyleSheet for MyTheme {
 }
 
 impl text::StyleSheet for MyTheme {
-    type Style = Text;
+    type Style = ();
 
-    fn appearance(&self, style: Self::Style) -> text::Appearance {
+    fn appearance(&self, _style: Self::Style) -> text::Appearance {
         text::Appearance {
             color: Some(Color::BLACK),
         }
@@ -56,7 +59,7 @@ impl text::StyleSheet for MyTheme {
 impl text_input::StyleSheet for MyTheme {
     type Style = ();
 
-    fn active(&self, style: Self::Style) -> text_input::Appearance {
+    fn active(&self, _style: Self::Style) -> text_input::Appearance {
         text_input::Appearance {
             background: Background::Color(Color::from_rgb(0.6, 0.8, 0.9)),
             border_radius: 3.0,
@@ -65,7 +68,7 @@ impl text_input::StyleSheet for MyTheme {
         }
     }
 
-    fn focused(&self, style: Self::Style) -> text_input::Appearance {
+    fn focused(&self, _style: Self::Style) -> text_input::Appearance {
         text_input::Appearance {
             background: Background::Color(Color::from_rgb(0.6, 0.8, 0.9)),
             border_radius: 3.0,
@@ -74,15 +77,15 @@ impl text_input::StyleSheet for MyTheme {
         }
     }
 
-    fn placeholder_color(&self, style: Self::Style) -> Color {
+    fn placeholder_color(&self, _style: Self::Style) -> Color {
         Color::from_rgb(0.5, 0.5, 0.5)
     }
 
-    fn value_color(&self, style: Self::Style) -> Color {
+    fn value_color(&self, _style: Self::Style) -> Color {
         Color::BLACK
     }
 
-    fn selection_color(&self, style: Self::Style) -> Color {
+    fn selection_color(&self, _style: Self::Style) -> Color {
         Color::from_rgb(0.0, 0.3, 0.9)
     }
 }
