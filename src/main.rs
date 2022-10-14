@@ -158,12 +158,11 @@ impl Application for App {
         .spacing(20)
         .into();
 
-            column![col, items_list]
-                .padding(20)
-                .width(Length::Fill)
-                .align_items(Alignment::Center)
-                .into()
-
+        column![col, items_list]
+            .padding(20)
+            .width(Length::Fill)
+            .align_items(Alignment::Center)
+            .into()
     }
 
     fn subscription(&self) -> Subscription<Message> {
