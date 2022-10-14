@@ -1,6 +1,10 @@
 use iced::{
     application,
-    widget::{button, container, text, text_input},
+    widget::{
+        button, container,
+        scrollable::{self, Scroller},
+        text, text_input,
+    },
     Background, Color,
 };
 
@@ -87,5 +91,54 @@ impl text_input::StyleSheet for MyTheme {
 
     fn selection_color(&self, _style: Self::Style) -> Color {
         Color::from_rgb(0.0, 0.3, 0.9)
+    }
+}
+
+impl scrollable::StyleSheet for MyTheme {
+    type Style = ();
+
+    fn active(&self, style: Self::Style) -> scrollable::Scrollbar {
+        scrollable::Scrollbar {
+            background: None,
+            border_radius: 10.0,
+            border_width: 2.0,
+            border_color: Color::BLACK,
+            scroller: Scroller {
+                color: ACCENT,
+                border_radius: 3.0,
+                border_width: 2.0,
+                border_color: Color::BLACK,
+            },
+        }
+    }
+
+    fn hovered(&self, style: Self::Style) -> scrollable::Scrollbar {
+        scrollable::Scrollbar {
+            background: None,
+            border_radius: 10.0,
+            border_width: 2.0,
+            border_color: Color::BLACK,
+            scroller: Scroller {
+                color: ACCENT,
+                border_radius: 3.0,
+                border_width: 2.0,
+                border_color: Color::BLACK,
+            },
+        }
+    }
+
+    fn dragging(&self, style: Self::Style) -> scrollable::Scrollbar {
+        scrollable::Scrollbar {
+            background: None,
+            border_radius: 10.0,
+            border_width: 2.0,
+            border_color: Color::BLACK,
+            scroller: Scroller {
+                color: ACCENT,
+                border_radius: 3.0,
+                border_width: 2.0,
+                border_color: Color::BLACK,
+            },
+        }
     }
 }

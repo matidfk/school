@@ -3,15 +3,13 @@ use theme::MyTheme;
 
 mod item;
 mod item_db;
+mod main_window;
 mod theme;
 mod transaction;
 
 use iced::{
-    executor,
-    keyboard::KeyCode,
-    subscription::events,
-    widget::{button, column, row, text, text_input, Column},
-    Alignment, Application, Command, Element, Event, Length, Renderer, Settings, Subscription,
+    executor, keyboard::KeyCode, subscription::events, Application, Command, Element, Event,
+    Renderer, Settings, Subscription,
 };
 use transaction::Transaction;
 
@@ -35,7 +33,7 @@ pub fn main() -> iced::Result {
 // }
 
 // setup model
-struct App {
+pub struct App {
     item_db: ItemDB,
     current_transaction: Transaction,
     input_value: String,
@@ -131,36 +129,7 @@ impl Application for App {
     }
 
     fn view(&self) -> Element<Self::Message, Renderer<Self::Theme>> {
-        let col: Column<Self::Message, Renderer<Self::Theme>> = Column::new()
-            .push(
-                text(format!(
-                    "Total Price: £{}",
-                    self.current_transaction.total_price()
-                ))
-                .size(50),
-            )
-            .push(text_input(
-                "barcode number go here",
-                &self.input_value,
-                Message::InputChanged,
-            ))
-            .padding(20)
-            .align_items(Alignment::Center);
-
-        let finish_button: Element<Self::Message, Renderer<Self::Theme>> =
-            button(text("FINISH TRANSACTION"))
-                .on_press(Message::FinishTransaction)
-                .into();
-
-        row![
-            text("poo").width(Length::Fill),
-            column![col, self.current_transaction.render(), finish_button]
-                .padding(20)
-                .spacing(10)
-                .width(Length::Fill)
-                .align_items(Alignment::Fill)
-        ]
-        .into()
+        main_window::render_main_window(self)
     }
 
     fn theme(&self) -> Self::Theme {

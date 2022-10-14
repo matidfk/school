@@ -1,6 +1,6 @@
 use iced::{
     alignment::{Horizontal, Vertical},
-    widget::{button, column, container, image, image::Handle, row, text, text_input},
+    widget::{button, column, container, image, image::Handle, row, scrollable, text, text_input},
     Alignment, Element, Length, Renderer,
 };
 
@@ -101,11 +101,14 @@ impl Transaction {
     }
 
     pub fn render(&self) -> Element<Message, Renderer<MyTheme>> {
-        column(self.items.iter().map(|item| item.render()).collect())
-            .width(Length::Fill)
-            .align_items(Alignment::Fill)
-            .spacing(20)
-            .into()
+        scrollable(
+            column(self.items.iter().map(|item| item.render()).collect())
+                .width(Length::Fill)
+                .align_items(Alignment::Fill)
+                .spacing(20),
+        )
+        .height(Length::Fill)
+        .into()
     }
 
     pub fn add_item(&mut self, item: &Item) {
@@ -137,6 +140,26 @@ impl Transaction {
     }
 
     pub fn generate_receipt(&self) -> String {
-        String::from("poo")
+        let mut string = String::new();
+
+        //  3     30      5
+        // qty | name | total
+
+        for item in &self.items {
+            string.push_str(&format!(
+                "{0: <3}{1: <30}{2: <5}\n",
+                &item.quantity,
+                &item.item.name,
+                &item.item.price * item.quantity as u32,
+            ));
+        }
+
+        string.push_str(&format!(
+            "{0: <33}{1: <5}",
+            "TOTAL PRICE PAID:",
+            self.total_price()
+        ));
+
+        string
     }
 }
