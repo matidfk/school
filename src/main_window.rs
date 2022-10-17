@@ -1,6 +1,6 @@
 use iced::{
-    alignment::{self, Horizontal},
-    widget::{button, column, row, text, text_input, Column},
+    alignment::Horizontal,
+    widget::{button, row, text, Column},
     Alignment, Element, Length, Renderer,
 };
 
@@ -19,11 +19,12 @@ pub fn render_main_window(app: &App) -> Element<Message, Renderer<Theme>> {
             .size(50),
         )
         // BARCODE INPUT
-        .push(text_input(
-            "barcode number go here",
-            &app.input_value,
-            Message::InputChanged,
-        ))
+        // .push(text_input(
+        //     "barcode number go here",
+        //     &app.input_value,
+        //     Message::InputChanged,
+        // ))
+        .push(text(&app.input_value))
         // TRANSACTION ITEMS LIST
         .push(app.current_transaction.render())
         // FINISH TRANSACTION BUTTON
