@@ -29,6 +29,30 @@
       "name": "hahahaha",
       "price": 20,
       "image_path": "apple.png"
+    },
+    {
+      "code": 5,
+      "name": "pica",
+      "price": 20,
+      "image_path": "apple.png"
+    },
+    {
+      "code": 6,
+      "name": "apel ifone",
+      "price": 90,
+      "image_path": "apple.png"
+    },
+    {
+      "code": 7,
+      "name": "pica2",
+      "price": 20,
+      "image_path": "apple.png"
+    },
+    {
+      "code": 8,
+      "name": "apel ifone2",
+      "price": 90,
+      "image_path": "apple.png"
     }
   ]
 }

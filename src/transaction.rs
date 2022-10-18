@@ -154,6 +154,8 @@ impl Transaction {
             ));
         }
 
+        string.push_str("======================================\n");
+
         string.push_str(&format!(
             "{0: <33}{1: <5}",
             "TOTAL PRICE PAID:",

@@ -9,6 +9,7 @@ use iced::{
 };
 
 const BACKGROUND: Color = Color::from_rgb(1.0, 1.0, 1.0);
+const BACKGROUND_DARKER: Color = Color::from_rgb(0.9, 0.9, 0.9);
 const TEXT_COLOR: Color = Color::from_rgb(0.0, 0.0, 0.0);
 const ACCENT: Color = Color::from_rgb(0.8, 0.2, 0.2);
 
@@ -26,12 +27,28 @@ impl application::StyleSheet for MyTheme {
     }
 }
 
+#[derive(Default, Debug, Clone, Copy)]
+pub enum ButtonStyle {
+    #[default]
+    TabInactive,
+    TabActive,
+}
+
+// impl ButtonStyle {
+// fn get_appearance()
+// }
 impl button::StyleSheet for MyTheme {
-    type Style = ();
-    fn active(&self, _style: Self::Style) -> button::Appearance {
-        button::Appearance {
-            background: Some(Background::Color(ACCENT)),
-            ..Default::default()
+    type Style = ButtonStyle;
+    fn active(&self, style: Self::Style) -> button::Appearance {
+        match style {
+            ButtonStyle::TabInactive => button::Appearance {
+                background: Some(Background::Color(BACKGROUND_DARKER)),
+                ..Default::default()
+            },
+            ButtonStyle::TabActive => button::Appearance {
+                background: Some(Background::Color(BACKGROUND)),
+                ..Default::default()
+            },
         }
     }
 }
@@ -41,9 +58,9 @@ impl container::StyleSheet for MyTheme {
     fn appearance(&self, _style: Self::Style) -> container::Appearance {
         container::Appearance {
             // text_color: (),
-            background: Some(Background::Color(Color::from_rgb(0.9, 0.9, 0.9))),
+            background: Some(Background::Color(BACKGROUND_DARKER)),
             // border_radius: (),
-            border_width: 2.0,
+            border_width: 1.0,
             border_color: Color::BLACK,
             ..Default::default()
         }
@@ -99,46 +116,24 @@ impl scrollable::StyleSheet for MyTheme {
 
     fn active(&self, style: Self::Style) -> scrollable::Scrollbar {
         scrollable::Scrollbar {
-            background: None,
-            border_radius: 10.0,
-            border_width: 2.0,
+            background: Some(Background::Color(BACKGROUND_DARKER)),
+            border_radius: 0.0,
+            border_width: 0.0,
             border_color: Color::BLACK,
             scroller: Scroller {
                 color: ACCENT,
-                border_radius: 3.0,
-                border_width: 2.0,
+                border_radius: 0.0,
+                border_width: 0.0,
                 border_color: Color::BLACK,
             },
         }
     }
 
     fn hovered(&self, style: Self::Style) -> scrollable::Scrollbar {
-        scrollable::Scrollbar {
-            background: None,
-            border_radius: 10.0,
-            border_width: 2.0,
-            border_color: Color::BLACK,
-            scroller: Scroller {
-                color: ACCENT,
-                border_radius: 3.0,
-                border_width: 2.0,
-                border_color: Color::BLACK,
-            },
-        }
+        self.active(style)
     }
 
     fn dragging(&self, style: Self::Style) -> scrollable::Scrollbar {
-        scrollable::Scrollbar {
-            background: None,
-            border_radius: 10.0,
-            border_width: 2.0,
-            border_color: Color::BLACK,
-            scroller: Scroller {
-                color: ACCENT,
-                border_radius: 3.0,
-                border_width: 2.0,
-                border_color: Color::BLACK,
-            },
-        }
+        self.active(style)
     }
 }
