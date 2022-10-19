@@ -13,6 +13,7 @@ use iced::{
     keyboard::KeyCode,
     subscription::events,
     widget::{button, row, text, Column},
+    window::Icon,
     Application, Command, Element, Event, Length, Renderer, Settings, Subscription,
 };
 use transaction::Transaction;
@@ -31,7 +32,7 @@ pub fn main() -> iced::Result {
             // decorations: (),
             // transparent: (),
             // always_on_top: (),
-            // icon: (),
+            icon: Some(Icon::from_file_data(include_bytes!("../icon.png"), None).unwrap()),
             ..Default::default()
         },
         // default_font: todo!(),

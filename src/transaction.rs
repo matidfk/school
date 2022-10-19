@@ -1,6 +1,6 @@
 use iced::{
     alignment::{Horizontal, Vertical},
-    widget::{button, column, container, image, image::Handle, row, scrollable, text, text_input},
+    widget::{button, column, container, image, image::Handle, row, scrollable, text},
     Alignment, Element, Length, Renderer,
 };
 
@@ -140,6 +140,9 @@ impl Transaction {
     }
 
     pub fn generate_receipt(&self) -> String {
+        if self.items.len() == 0 {
+            "".to_string();
+        }
         let mut string = String::new();
 
         //  3     30      5
