@@ -13,6 +13,7 @@ const BACKGROUND_DARKER: Color = Color::from_rgb(0.9, 0.9, 0.9);
 const TEXT_COLOR: Color = Color::from_rgb(0.0, 0.0, 0.0);
 const ACCENT: Color = Color::from_rgb(0.8, 0.2, 0.2);
 
+/// The theme for the application
 #[derive(Default, Clone, Copy)]
 pub struct MyTheme;
 
@@ -34,9 +35,6 @@ pub enum ButtonStyle {
     TabActive,
 }
 
-// impl ButtonStyle {
-// fn get_appearance()
-// }
 impl button::StyleSheet for MyTheme {
     type Style = ButtonStyle;
     fn active(&self, style: Self::Style) -> button::Appearance {
@@ -82,20 +80,15 @@ impl text_input::StyleSheet for MyTheme {
 
     fn active(&self, _style: Self::Style) -> text_input::Appearance {
         text_input::Appearance {
-            background: Background::Color(Color::from_rgb(0.6, 0.8, 0.9)),
-            border_radius: 3.0,
-            border_width: 2.0,
+            background: Background::Color(BACKGROUND_DARKER),
+            border_radius: 1.0,
+            border_width: 1.0,
             border_color: Color::BLACK,
         }
     }
 
-    fn focused(&self, _style: Self::Style) -> text_input::Appearance {
-        text_input::Appearance {
-            background: Background::Color(Color::from_rgb(0.6, 0.8, 0.9)),
-            border_radius: 3.0,
-            border_width: 2.0,
-            border_color: Color::BLACK,
-        }
+    fn focused(&self, style: Self::Style) -> text_input::Appearance {
+        self.active(style)
     }
 
     fn placeholder_color(&self, _style: Self::Style) -> Color {
@@ -107,7 +100,7 @@ impl text_input::StyleSheet for MyTheme {
     }
 
     fn selection_color(&self, _style: Self::Style) -> Color {
-        Color::from_rgb(0.0, 0.3, 0.9)
+        ACCENT
     }
 }
 
