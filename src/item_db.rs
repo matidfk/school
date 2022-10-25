@@ -6,7 +6,7 @@ use crate::{item::Item, transaction::Transaction};
 // TODO: maybe load into a hashmap for performance
 
 /// A database of all `Item`s
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct ItemDB {
     // pub items: HashMap<u64, Item>,
     pub items: Vec<Item>,

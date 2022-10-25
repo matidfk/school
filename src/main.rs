@@ -1,25 +1,25 @@
-use item::Item;
+use add_item_view::{AddItemMessage, AddItemView};
+use inventory_view::{InventoryMessage, InventoryView};
 use theme::{ButtonStyle, MyTheme};
 
+mod add_item_view;
+mod inventory_view;
 mod item;
 mod item_db;
 mod theme;
 mod transaction;
+mod transactions_view;
 mod utils;
-mod win_add_item;
-mod win_inventory;
-mod win_transactions;
 
 use iced::{
     executor,
-    keyboard::KeyCode,
     subscription::events,
-    widget::{button, row, text, Column},
+    widget::{button, text, Column, Row},
     window::Icon,
     Application, Command, Element, Event, Length, Renderer, Settings, Subscription,
 };
-use transaction::Transaction;
-use win_transactions::WinTransactions;
+
+use transactions_view::{TransactionsMessage, TransactionsView};
 
 use crate::item_db::ItemDB;
 
@@ -34,37 +34,12 @@ pub fn main() -> iced::Result {
         ..Default::default()
     })
 }
-// pub fn main() {
-//     let mut item_db = ItemDB::load_yaml("./item_db.json");
-//     // item_db.items.push(Item {
-//     //     code: 6,
-//     //     name: "pica2".to_owned(),
-//     //     price: 20,
-//     //     image_path: Some("apple.png".to_owned()),
-//     // });
-//     // item_db.items.push(Item {
-//     //     code: 7,
-//     //     name: "apel ifone2".to_owned(),
-//     //     price: 90,
-//     //     image_path: Some("apple.png".to_owned()),
-//     // });
-//     item_db.save_yaml("./item_db.yaml");
-// }
 
 /// The state model of the application
 pub struct App {
     item_db: ItemDB,
     current_view: View,
     should_exit: bool,
-
-    // Transactions
-    transactions: WinTransactions,
-    current_transaction: Transaction,
-    transactions_input_code: String,
-    // Inventory Management
-    inventory_input_search: String,
-    // Add Item
-    add_item_name: String,
 }
 
 impl Default for App {
@@ -73,10 +48,6 @@ impl Default for App {
             item_db: ItemDB::load_yaml("./item_db.yaml"),
             should_exit: false,
             current_view: Default::default(),
-            current_transaction: Default::default(),
-            transactions_input_code: Default::default(),
-            inventory_input_search: Default::default(),
-            add_item_name: Default::default(),
         }
     }
 }
@@ -84,31 +55,54 @@ impl Default for App {
 #[derive(Debug, Clone)]
 pub enum Message {
     EventOccured(Event),
-    InputChanged(String),
-    // TODO: use index instead i guess
-    ModifyCountInTransaction(Item, i32),
-    FinishTransaction,
-    ModifyAmountInStock(Item, i32),
+
+    Transactions(TransactionsMessage),
+    Inventory(InventoryMessage),
+
     SwitchView(View),
+
     Close,
-    InventorySearchChanged(String),
-    AddItemNameChanged(String),
+    AddItem(AddItemMessage),
 }
 
 /// Different views (tabs) of the application
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum View {
     /// The view for processing transactions
-    #[default]
-    Transactions,
+    Transactions(TransactionsView),
     /// The view for managing the inventory
-    Inventory,
+    Inventory(InventoryView),
     /// The view for adding new items
-    AddItem,
+    AddItem(AddItemView),
 }
 
-/// Height in pixels of an item element in the transaction view
-pub const ITEM_HEIGHT: u16 = 80;
+impl ToString for View {
+    fn to_string(&self) -> String {
+        match self {
+            View::Transactions(_) => "Transactions".to_string(),
+            View::Inventory(_) => "Inventory".to_string(),
+            View::AddItem(_) => "Add Item".to_string(),
+        }
+    }
+}
+
+impl View {
+    pub fn view(app: &App) -> Element<Message, Renderer<MyTheme>> {
+        match &app.current_view {
+            View::Transactions(v) => v.view().map(move |message| Message::Transactions(message)),
+            View::Inventory(v) => v
+                .view(&app.item_db)
+                .map(move |message| Message::Inventory(message)),
+            View::AddItem(v) => v.view().map(move |message| Message::AddItem(message)),
+        }
+    }
+}
+
+impl Default for View {
+    fn default() -> Self {
+        View::Transactions(TransactionsView::default())
+    }
+}
 
 impl Application for App {
     type Executor = executor::Default;
@@ -134,90 +128,48 @@ impl Application for App {
 
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
-            // update input value
-            Message::InputChanged(value) => self.transactions_input_code = value,
-
-            Message::EventOccured(event) => match event {
-                Event::Keyboard(event) if self.current_view == View::Transactions => match event {
-                    iced::keyboard::Event::CharacterReceived(char) => {
-                        // add only if number
-                        if char.is_numeric() {
-                            self.transactions_input_code.push(char);
-                        }
-                    }
-                    iced::keyboard::Event::KeyPressed {
-                        key_code,
-                        modifiers: _,
-                    } => {
-                        // flush
-                        if key_code == KeyCode::Enter {
-                            if !self.transactions_input_code.is_empty() {
-                                // get number in input
-                                let code = self
-                                    .transactions_input_code
-                                    .parse()
-                                    .expect("Couldn't parse number");
-                                // get corresponding item
-                                let item = self.item_db.get_item(code);
-
-                                // if item is found
-                                if let Some(item) = item {
-                                    // add to transaction
-                                    self.current_transaction.add_item(item)
-                                } else {
-                                    // print error message
-                                    println!("invalid item {}", self.transactions_input_code)
-                                }
-
-                                // clear input
-                                self.transactions_input_code.clear();
-                            }
-                        }
-                    }
-                    _ => {}
-                },
+            Message::EventOccured(event) => match &mut self.current_view {
+                View::Transactions(v) => {
+                    v.update(TransactionsMessage::EventOccured(event), &mut self.item_db)
+                }
                 _ => {}
             },
-            Message::ModifyCountInTransaction(item, count) => {
-                self.current_transaction.modify_quantity(&item, count);
-            }
-            Message::FinishTransaction => {
-                println!("{}", &self.current_transaction.generate_receipt());
-                self.item_db
-                    .update_quantities_from_transaction(&self.current_transaction);
-                self.current_transaction = Default::default();
-            }
+            // Switch view
             Message::SwitchView(view) => {
                 self.current_view = view;
             }
+            // Close window and save database
             Message::Close => {
                 self.item_db.save_yaml("./item_db.yaml");
-                self.should_exit = true
+                self.should_exit = true;
+                println!("Closing gracefully, Saving Database.");
             }
-            Message::ModifyAmountInStock(item, count) => {
-                self.item_db.modify_quantity(&item, count);
+            // Map to TransactionsMessage
+            Message::Transactions(message) => {
+                if let View::Transactions(v) = &mut self.current_view {
+                    v.update(message, &mut self.item_db);
+                }
             }
-            Message::InventorySearchChanged(value) => self.inventory_input_search = value,
-            Message::AddItemNameChanged(value) => self.add_item_name = value,
+            // Map to InventoryMessage
+            Message::Inventory(message) => {
+                if let View::Inventory(v) = &mut self.current_view {
+                    v.update(message, &mut self.item_db);
+                }
+            }
+            Message::AddItem(message) => {
+                if let View::AddItem(v) = &mut self.current_view {
+                    v.update(message);
+                }
+            }
         }
         Command::none()
     }
 
     fn view(&self) -> Element<Self::Message, Renderer<Self::Theme>> {
-        match self.current_view {
-            View::Transactions => Column::new()
-                .push(tab_buttons(&self))
-                .push(win_transactions::render(&self))
-                .into(),
-            View::Inventory => Column::new()
-                .push(tab_buttons(&self))
-                .push(win_inventory::render(&self))
-                .into(),
-            View::AddItem => Column::new()
-                .push(tab_buttons(&self))
-                .push(win_add_item::render(&self))
-                .into(),
-        }
+        Column::new()
+            .push(tab_buttons(&self))
+            .push(View::view(&self))
+            .into()
     }
 
     fn should_exit(&self) -> bool {
@@ -227,34 +179,37 @@ impl Application for App {
 
 /// Render the tab buttons at the top of the app
 fn tab_buttons(app: &App) -> Element<Message, Renderer<MyTheme>> {
+    // Helper function that returns a ButtonStyle
     fn get_style(active: bool) -> ButtonStyle {
-        if active == true {
+        if active {
             ButtonStyle::TabActive
         } else {
             ButtonStyle::TabInactive
         }
     }
-    row(vec![
-        button(text("Transactions"))
-            .style(get_style(app.current_view == View::Transactions))
-            .on_press(Message::SwitchView(View::Transactions))
-            .into(),
-        button(text("Inventory"))
-            .style(get_style(app.current_view == View::Inventory))
-            .on_press(Message::SwitchView(View::Inventory))
-            .into(),
-        button(text("Add Item"))
-            .style(get_style(app.current_view == View::AddItem))
-            .on_press(Message::SwitchView(View::AddItem))
-            .into(),
-        // spacer
-        button(text(" ")).width(Length::Fill).into(),
+
+    // Render tab buttons
+    [
+        View::Transactions(Default::default()),
+        View::Inventory(Default::default()),
+        View::AddItem(Default::default()),
+    ]
+    .iter()
+    .fold(Row::new(), |row, view| {
+        row.push(
+            button(text(view.to_string()))
+                .style(get_style(app.current_view.to_string() == view.to_string()))
+                .on_press(Message::SwitchView(view.clone())),
+        )
+    })
+    // spacer
+    .push(button(text(" ")).width(Length::Fill))
+    .push(
         // close button
         button(text("  x  "))
             .style(ButtonStyle::TabInactive)
-            .on_press(Message::Close)
-            .into(),
-    ])
+            .on_press(Message::Close),
+    )
     .width(Length::Fill)
     .into()
 }
