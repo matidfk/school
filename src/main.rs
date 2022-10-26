@@ -15,7 +15,7 @@ use iced::{
     executor,
     subscription::events,
     widget::{button, text, Column, Row},
-    window::Icon,
+    window::{self, Icon},
     Application, Command, Element, Event, Length, Renderer, Settings, Subscription,
 };
 
@@ -128,12 +128,14 @@ impl Application for App {
 
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
-            Message::EventOccured(event) => match &mut self.current_view {
-                View::Transactions(v) => {
+            Message::EventOccured(event) => {
+                if let View::Transactions(v) = &mut self.current_view {
                     v.update(TransactionsMessage::EventOccured(event), &mut self.item_db)
                 }
-                _ => {}
-            },
+                // if let Event::Window(window::Event::CloseRequested) = event {
+                // println!("Closing");
+                // }
+            }
             // Switch view
             Message::SwitchView(view) => {
                 self.current_view = view;
