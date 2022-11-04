@@ -3,9 +3,9 @@ items:
   name: Orange
   price: 90
   image_path: orange.png
-  amount_in_stock: 0
+  amount_in_stock: 4
 - code: 2
   name: Apple
   price: 80
   image_path: apple.bmp
-  amount_in_stock: 0
+  amount_in_stock: 3

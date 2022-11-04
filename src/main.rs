@@ -26,11 +26,13 @@ use crate::item_db::ItemDB;
 pub fn main() -> iced::Result {
     App::run(Settings {
         window: iced::window::Settings {
-            size: (900, 500),
+            size: (1280, 720),
             position: iced::window::Position::Centered,
             icon: Some(Icon::from_file_data(include_bytes!("../icon.png"), None).unwrap()),
             ..Default::default()
         },
+        antialiasing: true,
+        exit_on_close_request: false,
         ..Default::default()
     })
 }
@@ -58,11 +60,11 @@ pub enum Message {
 
     Transactions(TransactionsMessage),
     Inventory(InventoryMessage),
+    AddItem(AddItemMessage),
 
     SwitchView(View),
 
     Close,
-    AddItem(AddItemMessage),
 }
 
 /// Different views (tabs) of the application
@@ -89,7 +91,9 @@ impl ToString for View {
 impl View {
     pub fn view(app: &App) -> Element<Message, Renderer<MyTheme>> {
         match &app.current_view {
-            View::Transactions(v) => v.view().map(move |message| Message::Transactions(message)),
+            View::Transactions(v) => v
+                .view(&app.item_db)
+                .map(move |message| Message::Transactions(message)),
             View::Inventory(v) => v
                 .view(&app.item_db)
                 .map(move |message| Message::Inventory(message)),

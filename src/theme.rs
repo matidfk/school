@@ -5,13 +5,14 @@ use iced::{
         scrollable::{self, Scroller},
         text, text_input,
     },
-    Background, Color,
+    Background, Color, Vector,
 };
 
 const BACKGROUND: Color = Color::from_rgb(1.0, 1.0, 1.0);
 const BACKGROUND_DARKER: Color = Color::from_rgb(0.9, 0.9, 0.9);
 const TEXT_COLOR: Color = Color::from_rgb(0.0, 0.0, 0.0);
 const ACCENT: Color = Color::from_rgb(0.8, 0.2, 0.2);
+const BORDER_RADIUS: f32 = 5.0;
 
 /// The theme for the application
 #[derive(Default, Clone, Copy)]
@@ -28,11 +29,14 @@ impl application::StyleSheet for MyTheme {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum ButtonStyle {
     #[default]
     TabInactive,
     TabActive,
+    Item,
+    ItemSelected,
+    Important,
 }
 
 impl button::StyleSheet for MyTheme {
@@ -47,6 +51,43 @@ impl button::StyleSheet for MyTheme {
                 background: Some(Background::Color(BACKGROUND)),
                 ..Default::default()
             },
+            ButtonStyle::Item => button::Appearance {
+                background: Some(Background::Color(BACKGROUND_DARKER)),
+                // shadow_offset: Vector::default(),
+                border_radius: BORDER_RADIUS,
+                border_color: TEXT_COLOR,
+                border_width: 1.0,
+                ..Default::default()
+            },
+            ButtonStyle::ItemSelected => button::Appearance {
+                background: Some(Background::Color(ACCENT)),
+                ..self.active(ButtonStyle::Item)
+            },
+            ButtonStyle::Important => button::Appearance {
+                background: Some(Background::Color(ACCENT)),
+                border_radius: BORDER_RADIUS,
+                border_color: TEXT_COLOR,
+                border_width: 1.0,
+                ..Default::default()
+            },
+        }
+    }
+
+    fn hovered(&self, style: Self::Style) -> button::Appearance {
+        let active = self.active(style);
+
+        // no shadow on items and tabs
+        if style == ButtonStyle::Item
+            || style == ButtonStyle::ItemSelected
+            || style == ButtonStyle::TabActive
+            || style == ButtonStyle::TabInactive
+        {
+            return active;
+        }
+
+        button::Appearance {
+            shadow_offset: active.shadow_offset + Vector::new(0.0, 1.0),
+            ..active
         }
     }
 }
