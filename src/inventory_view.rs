@@ -3,7 +3,7 @@ use iced::{
     Element, Length, Renderer,
 };
 
-use crate::{item::Item, item_db::ItemDB, theme::MyTheme, utils::get_handle};
+use crate::{item::Item, item_db::ItemDB, theme::MyTheme, utils::get_handle, View, Message, App};
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct InventoryView {
@@ -16,36 +16,56 @@ pub enum InventoryMessage {
     ModifyAmountInStock(Item, i32),
 }
 
-impl InventoryView {
-    pub fn view<'a>(&'a self, item_db: &'a ItemDB) -> Element<InventoryMessage, Renderer<MyTheme>> {
-        let items = column(
-            item_db
-                .items
-                .iter()
-                .filter(|item| item.name.contains(&self.input_search))
-                .map(|item| render_item(item))
-                .collect(),
-        );
-
-        Column::new()
-            .push(text_input(
-                "Search...",
-                &self.input_search,
-                InventoryMessage::SearchChanged,
-            ))
-            .push(scrollable(items))
-            .into()
+impl View for InventoryView {
+    fn view(&self) -> Element<'_, Message, Renderer<MyTheme>> {
+        text("inv").into()
     }
 
-    pub fn update(&mut self, message: InventoryMessage, item_db: &mut ItemDB) {
-        match message {
-            InventoryMessage::SearchChanged(value) => self.input_search = value,
-            InventoryMessage::ModifyAmountInStock(item, amount) => {
-                item_db.modify_quantity(&item, amount)
-            }
-        }
+    type Message = InventoryMessage;
+
+    fn title(&self) -> String {
+        "Inv".to_string()
+    }
+
+    fn tab_label(&self) -> iced_aw::TabLabel {
+        iced_aw::TabLabel::Text("inv".to_string())
+    }
+
+    fn update(&mut self, message: Self::Message) {
+        todo!()
     }
 }
+
+// impl InventoryView {
+//     pub fn view<'a>(&'a self, item_db: &'a ItemDB) -> Element<InventoryMessage, Renderer<MyTheme>> {
+//         let items = column(
+//             item_db
+//                 .items
+//                 .iter()
+//                 .filter(|item| item.name.contains(&self.input_search))
+//                 .map(|item| render_item(item))
+//                 .collect(),
+//         );
+
+//         Column::new()
+//             .push(text_input(
+//                 "Search...",
+//                 &self.input_search,
+//                 InventoryMessage::SearchChanged,
+//             ))
+//             .push(scrollable(items))
+//             .into()
+//     }
+
+//     pub fn update(&mut self, message: InventoryMessage, item_db: &mut ItemDB) {
+//         match message {
+//             InventoryMessage::SearchChanged(value) => self.input_search = value,
+//             InventoryMessage::ModifyAmountInStock(item, amount) => {
+//                 item_db.modify_quantity(&item, amount)
+//             }
+//         }
+//     }
+// }
 
 fn render_item(item: &Item) -> Element<InventoryMessage, Renderer<MyTheme>> {
     container(row(vec![

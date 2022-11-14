@@ -7,6 +7,8 @@ use iced::{
     },
     Background, Color, Vector,
 };
+use iced_aw::tabs;
+
 
 const BACKGROUND: Color = Color::from_rgb(1.0, 1.0, 1.0);
 const BACKGROUND_DARKER: Color = Color::from_rgb(0.9, 0.9, 0.9);
@@ -18,10 +20,22 @@ const BORDER_RADIUS: f32 = 5.0;
 #[derive(Default, Clone, Copy)]
 pub struct MyTheme;
 
+impl tabs::StyleSheet for MyTheme {
+    type Style = ();
+
+    fn active(&self, style: Self::Style, is_active: bool) -> iced_aw::style::tab_bar::Appearance {
+        iced_aw::style::tab_bar::Appearance::default()
+    }
+
+    fn hovered(&self, style: Self::Style, is_active: bool) -> iced_aw::style::tab_bar::Appearance {
+        iced_aw::style::tab_bar::Appearance::default()
+    }
+}
+
 impl application::StyleSheet for MyTheme {
     type Style = ();
 
-    fn appearance(&self, _style: Self::Style) -> application::Appearance {
+    fn appearance(&self, _style: &Self::Style) -> application::Appearance {
         application::Appearance {
             background_color: BACKGROUND,
             text_color: TEXT_COLOR,
@@ -41,7 +55,7 @@ pub enum ButtonStyle {
 
 impl button::StyleSheet for MyTheme {
     type Style = ButtonStyle;
-    fn active(&self, style: Self::Style) -> button::Appearance {
+    fn active(&self, style: &Self::Style) -> button::Appearance {
         match style {
             ButtonStyle::TabInactive => button::Appearance {
                 background: Some(Background::Color(BACKGROUND_DARKER)),
@@ -61,7 +75,7 @@ impl button::StyleSheet for MyTheme {
             },
             ButtonStyle::ItemSelected => button::Appearance {
                 background: Some(Background::Color(ACCENT)),
-                ..self.active(ButtonStyle::Item)
+                ..self.active(&ButtonStyle::Item)
             },
             ButtonStyle::Important => button::Appearance {
                 background: Some(Background::Color(ACCENT)),
@@ -73,14 +87,14 @@ impl button::StyleSheet for MyTheme {
         }
     }
 
-    fn hovered(&self, style: Self::Style) -> button::Appearance {
-        let active = self.active(style);
+    fn hovered(&self, style: &ButtonStyle) -> button::Appearance {
+        let active = self.active(&style);
 
         // no shadow on items and tabs
-        if style == ButtonStyle::Item
-            || style == ButtonStyle::ItemSelected
-            || style == ButtonStyle::TabActive
-            || style == ButtonStyle::TabInactive
+        if style == &ButtonStyle::Item
+            || style == &ButtonStyle::ItemSelected
+            || style == &ButtonStyle::TabActive
+            || style == &ButtonStyle::TabInactive
         {
             return active;
         }
@@ -94,7 +108,7 @@ impl button::StyleSheet for MyTheme {
 
 impl container::StyleSheet for MyTheme {
     type Style = ();
-    fn appearance(&self, _style: Self::Style) -> container::Appearance {
+    fn appearance(&self, _style: &Self::Style) -> container::Appearance {
         container::Appearance {
             // text_color: (),
             background: Some(Background::Color(BACKGROUND_DARKER)),
@@ -119,7 +133,7 @@ impl text::StyleSheet for MyTheme {
 impl text_input::StyleSheet for MyTheme {
     type Style = ();
 
-    fn active(&self, _style: Self::Style) -> text_input::Appearance {
+    fn active(&self, _style: &Self::Style) -> text_input::Appearance {
         text_input::Appearance {
             background: Background::Color(BACKGROUND_DARKER),
             border_radius: 1.0,
@@ -128,19 +142,19 @@ impl text_input::StyleSheet for MyTheme {
         }
     }
 
-    fn focused(&self, style: Self::Style) -> text_input::Appearance {
+    fn focused(&self, style: &Self::Style) -> text_input::Appearance {
         self.active(style)
     }
 
-    fn placeholder_color(&self, _style: Self::Style) -> Color {
+    fn placeholder_color(&self, _style: &Self::Style) -> Color {
         Color::from_rgb(0.5, 0.5, 0.5)
     }
 
-    fn value_color(&self, _style: Self::Style) -> Color {
+    fn value_color(&self, _style: &Self::Style) -> Color {
         Color::BLACK
     }
 
-    fn selection_color(&self, _style: Self::Style) -> Color {
+    fn selection_color(&self, _style: &Self::Style) -> Color {
         ACCENT
     }
 }
@@ -148,7 +162,7 @@ impl text_input::StyleSheet for MyTheme {
 impl scrollable::StyleSheet for MyTheme {
     type Style = ();
 
-    fn active(&self, style: Self::Style) -> scrollable::Scrollbar {
+    fn active(&self, style: &Self::Style) -> scrollable::Scrollbar {
         scrollable::Scrollbar {
             background: Some(Background::Color(BACKGROUND_DARKER)),
             border_radius: 0.0,
@@ -163,11 +177,11 @@ impl scrollable::StyleSheet for MyTheme {
         }
     }
 
-    fn hovered(&self, style: Self::Style) -> scrollable::Scrollbar {
+    fn hovered(&self, style: &Self::Style) -> scrollable::Scrollbar {
         self.active(style)
     }
 
-    fn dragging(&self, style: Self::Style) -> scrollable::Scrollbar {
+    fn dragging(&self, style: &Self::Style) -> scrollable::Scrollbar {
         self.active(style)
     }
 }

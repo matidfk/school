@@ -1,6 +1,6 @@
-use add_item_view::{AddItemMessage, AddItemView};
+use add_item_view::AddItemMessage;
 use inventory_view::{InventoryMessage, InventoryView};
-use theme::{ButtonStyle, MyTheme};
+use theme::MyTheme;
 
 mod add_item_view;
 mod inventory_view;
@@ -12,12 +12,10 @@ mod transactions_view;
 mod utils;
 
 use iced::{
-    executor,
-    subscription::events,
-    widget::{button, text, Column, Row},
-    window::{self, Icon},
-    Application, Command, Element, Event, Length, Renderer, Settings, Subscription,
+    executor, subscription::events, Application, Command, Element, Event, Renderer, Settings,
+    Subscription, window,
 };
+use iced_aw::{TabLabel, Tabs};
 
 use transactions_view::{TransactionsMessage, TransactionsView};
 
@@ -28,11 +26,12 @@ pub fn main() -> iced::Result {
         window: iced::window::Settings {
             size: (1280, 720),
             position: iced::window::Position::Centered,
-            icon: Some(Icon::from_file_data(include_bytes!("../icon.png"), None).unwrap()),
+            // icon: Some(Icon::from_file_data(include_bytes!("../icon.png"), None).unwrap()),
             ..Default::default()
         },
         antialiasing: true,
         exit_on_close_request: false,
+        default_font: Some(include_bytes!("../fonts/FiraSans-Medium.ttf")),
         ..Default::default()
     })
 }
@@ -40,8 +39,22 @@ pub fn main() -> iced::Result {
 /// The state model of the application
 pub struct App {
     item_db: ItemDB,
-    current_view: View,
+    transactions_view: TransactionsView,
+    inventory_view: InventoryView,
+    active_view: usize,
     should_exit: bool,
+}
+
+pub trait View {
+    type Message;
+
+    fn title(&self) -> String;
+
+    fn tab_label(&self) -> TabLabel;
+
+    fn view(&self) -> Element<'_, Message, Renderer<MyTheme>>;
+
+    fn update(&mut self, message: Self::Message);
 }
 
 impl Default for App {
@@ -49,7 +62,9 @@ impl Default for App {
         Self {
             item_db: ItemDB::load_yaml("./item_db.yaml"),
             should_exit: false,
-            current_view: Default::default(),
+            transactions_view: TransactionsView::default(),
+            inventory_view: InventoryView::default(),
+            active_view: 0,
         }
     }
 }
@@ -62,50 +77,9 @@ pub enum Message {
     Inventory(InventoryMessage),
     AddItem(AddItemMessage),
 
-    SwitchView(View),
+    SetActiveView(usize),
 
     Close,
-}
-
-/// Different views (tabs) of the application
-#[derive(Debug, Clone, PartialEq)]
-pub enum View {
-    /// The view for processing transactions
-    Transactions(TransactionsView),
-    /// The view for managing the inventory
-    Inventory(InventoryView),
-    /// The view for adding new items
-    AddItem(AddItemView),
-}
-
-impl ToString for View {
-    fn to_string(&self) -> String {
-        match self {
-            View::Transactions(_) => "Transactions".to_string(),
-            View::Inventory(_) => "Inventory".to_string(),
-            View::AddItem(_) => "Add Item".to_string(),
-        }
-    }
-}
-
-impl View {
-    pub fn view(app: &App) -> Element<Message, Renderer<MyTheme>> {
-        match &app.current_view {
-            View::Transactions(v) => v
-                .view(&app.item_db)
-                .map(move |message| Message::Transactions(message)),
-            View::Inventory(v) => v
-                .view(&app.item_db)
-                .map(move |message| Message::Inventory(message)),
-            View::AddItem(v) => v.view().map(move |message| Message::AddItem(message)),
-        }
-    }
-}
-
-impl Default for View {
-    fn default() -> Self {
-        View::Transactions(TransactionsView::default())
-    }
 }
 
 impl Application for App {
@@ -133,17 +107,15 @@ impl Application for App {
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
             Message::EventOccured(event) => {
-                if let View::Transactions(v) = &mut self.current_view {
-                    v.update(TransactionsMessage::EventOccured(event), &mut self.item_db)
-                }
-                // if let Event::Window(window::Event::CloseRequested) = event {
-                // println!("Closing");
+                // if let View::Transactions(v) = &mut self.current_view {
+                // v.update(TransactionsMessage::EventOccured(event), &mut self.item_db)
                 // }
+                if let Event::Window(window::Event::CloseRequested) = event {
+                    self.should_exit = true;
+                    println!("Closing");
+                }
             }
-            // Switch view
-            Message::SwitchView(view) => {
-                self.current_view = view;
-            }
+
             // Close window and save database
             Message::Close => {
                 self.item_db.save_yaml("./item_db.yaml");
@@ -151,71 +123,34 @@ impl Application for App {
                 println!("Closing gracefully, Saving Database.");
             }
             // Map to TransactionsMessage
-            Message::Transactions(message) => {
-                if let View::Transactions(v) = &mut self.current_view {
-                    v.update(message, &mut self.item_db);
-                }
-            }
+            Message::Transactions(message) => self.transactions_view.update(message),
             // Map to InventoryMessage
             Message::Inventory(message) => {
-                if let View::Inventory(v) = &mut self.current_view {
-                    v.update(message, &mut self.item_db);
-                }
+                // if let View::Inventory(v) = &mut self.current_view {
+                // v.update(message, &mut self.item_db);
+                // }
             }
             Message::AddItem(message) => {
-                if let View::AddItem(v) = &mut self.current_view {
-                    v.update(message);
-                }
+                // if let View::AddItem(v) = &mut self.current_view {
+                // v.update(message);
+                // }
             }
+            Message::SetActiveView(i) => self.active_view = i,
         }
         Command::none()
     }
 
     fn view(&self) -> Element<Self::Message, Renderer<Self::Theme>> {
-        Column::new()
-            .push(tab_buttons(&self))
-            .push(View::view(&self))
+        Tabs::new(self.active_view, Message::SetActiveView)
+            .push(
+                self.transactions_view.tab_label(),
+                self.transactions_view.view(),
+            )
+            .push(self.inventory_view.tab_label(), self.inventory_view.view())
             .into()
     }
 
     fn should_exit(&self) -> bool {
         self.should_exit
     }
-}
-
-/// Render the tab buttons at the top of the app
-fn tab_buttons(app: &App) -> Element<Message, Renderer<MyTheme>> {
-    // Helper function that returns a ButtonStyle
-    fn get_style(active: bool) -> ButtonStyle {
-        if active {
-            ButtonStyle::TabActive
-        } else {
-            ButtonStyle::TabInactive
-        }
-    }
-
-    // Render tab buttons
-    [
-        View::Transactions(Default::default()),
-        View::Inventory(Default::default()),
-        View::AddItem(Default::default()),
-    ]
-    .iter()
-    .fold(Row::new(), |row, view| {
-        row.push(
-            button(text(view.to_string()))
-                .style(get_style(app.current_view.to_string() == view.to_string()))
-                .on_press(Message::SwitchView(view.clone())),
-        )
-    })
-    // spacer
-    .push(button(text(" ")).width(Length::Fill))
-    .push(
-        // close button
-        button(text("  x  "))
-            .style(ButtonStyle::TabInactive)
-            .on_press(Message::Close),
-    )
-    .width(Length::Fill)
-    .into()
 }
