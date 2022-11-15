@@ -34,14 +34,21 @@ impl Transaction {
     }
 
     /// Adds an item to the transaction
-    pub fn add_item(&mut self, item: &Item) {
+    /// Returns true if the item has existed already
+    pub fn add_item(&mut self, item: &Item) -> bool {
         let found = self.items.iter_mut().find(|t_item| &t_item.item == item);
 
         match found {
             // If item exists already, add 1 to the quantity
-            Some(found) => found.quantity += 1,
+            Some(found) => {
+                found.quantity += 1;
+                return true;
+            }
             // If not, create it with quantity 1
-            None => self.items.push(TransactionItem::new(item)),
+            None => {
+                self.items.push(TransactionItem::new(item));
+                return false;
+            }
         }
     }
 

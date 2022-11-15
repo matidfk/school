@@ -7,8 +7,7 @@ use iced::{
     },
     Background, Color, Vector,
 };
-use iced_aw::tabs;
-
+use iced_aw::{native::modal, tabs};
 
 const BACKGROUND: Color = Color::from_rgb(1.0, 1.0, 1.0);
 const BACKGROUND_DARKER: Color = Color::from_rgb(0.9, 0.9, 0.9);
@@ -20,15 +19,39 @@ const BORDER_RADIUS: f32 = 5.0;
 #[derive(Default, Clone, Copy)]
 pub struct MyTheme;
 
+impl modal::StyleSheet for MyTheme {
+    type Style = ();
+
+    fn active(&self, style: Self::Style) -> iced_aw::style::modal::Appearance {
+        iced_aw::style::modal::Appearance {
+            background: Background::Color(BACKGROUND),
+        }
+    }
+}
+
 impl tabs::StyleSheet for MyTheme {
     type Style = ();
 
     fn active(&self, style: Self::Style, is_active: bool) -> iced_aw::style::tab_bar::Appearance {
-        iced_aw::style::tab_bar::Appearance::default()
+        iced_aw::style::tab_bar::Appearance {
+            background: Some(Background::Color(BACKGROUND)),
+            border_color: Some(TEXT_COLOR),
+            border_width: 0.0,
+            tab_label_background: if is_active {
+                Background::Color(ACCENT)
+            } else {
+                Background::Color(BACKGROUND)
+            },
+            tab_label_border_color: TEXT_COLOR,
+            tab_label_border_width: 1.0,
+            // icon_color: todo!(),
+            // text_color: todo!(),
+            ..Default::default()
+        }
     }
 
     fn hovered(&self, style: Self::Style, is_active: bool) -> iced_aw::style::tab_bar::Appearance {
-        iced_aw::style::tab_bar::Appearance::default()
+        self.active(style, is_active)
     }
 }
 
@@ -45,11 +68,9 @@ impl application::StyleSheet for MyTheme {
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum ButtonStyle {
-    #[default]
-    TabInactive,
-    TabActive,
     Item,
     ItemSelected,
+    #[default]
     Important,
 }
 
@@ -57,14 +78,6 @@ impl button::StyleSheet for MyTheme {
     type Style = ButtonStyle;
     fn active(&self, style: &Self::Style) -> button::Appearance {
         match style {
-            ButtonStyle::TabInactive => button::Appearance {
-                background: Some(Background::Color(BACKGROUND_DARKER)),
-                ..Default::default()
-            },
-            ButtonStyle::TabActive => button::Appearance {
-                background: Some(Background::Color(BACKGROUND)),
-                ..Default::default()
-            },
             ButtonStyle::Item => button::Appearance {
                 background: Some(Background::Color(BACKGROUND_DARKER)),
                 // shadow_offset: Vector::default(),
@@ -91,11 +104,7 @@ impl button::StyleSheet for MyTheme {
         let active = self.active(&style);
 
         // no shadow on items and tabs
-        if style == &ButtonStyle::Item
-            || style == &ButtonStyle::ItemSelected
-            || style == &ButtonStyle::TabActive
-            || style == &ButtonStyle::TabInactive
-        {
+        if style == &ButtonStyle::Item || style == &ButtonStyle::ItemSelected {
             return active;
         }
 
