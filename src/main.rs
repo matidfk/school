@@ -1,8 +1,13 @@
+#![feature(iter_next_chunk)]
+#![feature(iter_array_chunks)]
+#![feature(array_chunks)]
 use inventory_view::{InventoryMessage, InventoryView};
+use item_creation_view::ItemCreationView;
 use theme::MyTheme;
 
 mod inventory_view;
 mod item;
+mod item_creation_view;
 mod item_db;
 mod theme;
 mod transaction;
@@ -10,10 +15,12 @@ mod transactions_view;
 mod utils;
 
 use iced::{
+    alignment::Horizontal,
     executor,
     subscription::events,
-    widget::{button, column, text},
-    window, Application, Command, Event, Renderer, Settings, Subscription,
+    widget::{button, column, text, text_input, Space},
+    window, Alignment, Application, Color, Command, Event, Length, Renderer, Settings,
+    Subscription,
 };
 
 use iced_aw::{Modal, TabLabel, Tabs};
@@ -45,8 +52,10 @@ pub struct App {
     item_db: ItemDB,
     transactions_view: TransactionsView,
     inventory_view: InventoryView,
-    active_view: usize,
-    show_password_modal: bool,
+    item_creation_view: ItemCreationView,
+    active_view: ViewIndex,
+    desired_view: Option<ViewIndex>,
+    password_input: String,
     should_exit: bool,
 }
 
@@ -57,8 +66,10 @@ impl Default for App {
             should_exit: false,
             transactions_view: TransactionsView::default(),
             inventory_view: InventoryView::default(),
-            show_password_modal: false,
-            active_view: 0,
+            item_creation_view: ItemCreationView::default(),
+            active_view: ViewIndex::Transactions,
+            password_input: Default::default(),
+            desired_view: None,
         }
     }
 }
@@ -71,7 +82,33 @@ pub enum Message {
     Inventory(InventoryMessage),
 
     ClosePasswordModal,
-    SetActiveView(usize),
+    PasswordChanged(String),
+    SetActiveView(ViewIndex),
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum ViewIndex {
+    Transactions = 0,
+    Inventory = 1,
+    ItemCreation = 2,
+}
+
+impl ViewIndex {
+    pub fn to_usize(&self) -> usize {
+        match self {
+            ViewIndex::Transactions => 0,
+            ViewIndex::Inventory => 1,
+            ViewIndex::ItemCreation => 2,
+        }
+    }
+    pub fn from_usize(usize: usize) -> Self {
+        match usize {
+            0 => Self::Transactions,
+            1 => Self::Inventory,
+            2 => Self::ItemCreation,
+            _ => panic!("oh no"),
+        }
+    }
 }
 
 impl Application for App {
@@ -100,7 +137,7 @@ impl Application for App {
         match message {
             Message::EventOccured(event) => {
                 // if transactions view is open
-                if self.active_view == 0 {
+                if self.active_view == ViewIndex::Transactions {
                     self.transactions_view.update(
                         TransactionsMessage::EventOccured(event.clone()),
                         &mut self.item_db,
@@ -118,71 +155,84 @@ impl Application for App {
                 self.transactions_view.update(message, &mut self.item_db)
             }
             Message::Inventory(message) => self.inventory_view.update(message, &mut self.item_db),
-            Message::SetActiveView(i) => {
-                if i == 1 {
-                    self.show_password_modal = true;
+            Message::SetActiveView(new_index) => {
+                // inventory
+                const PASSWORD_PROTECTED_VIEWS: &'static [ViewIndex] = &[ViewIndex::Inventory];
+
+                if PASSWORD_PROTECTED_VIEWS.contains(&new_index) {
+                    self.desired_view = Some(new_index);
+                } else {
+                    self.active_view = new_index
                 }
-                self.active_view = i
             }
-            Message::ClosePasswordModal => self.show_password_modal = false,
+            Message::ClosePasswordModal => {
+                if self.password_input == "password123" {
+                    self.active_view = self.desired_view.unwrap();
+                } else {
+                    std::process::Command::new("notify-send")
+                        .arg("Incorrect Password")
+                        .status()
+                        .expect("Failed to notify");
+                }
+                self.desired_view = None;
+                self.password_input.clear();
+            }
+            Message::PasswordChanged(v) => self.password_input = v,
         }
         Command::none()
     }
 
     fn view(&self) -> Element {
-        let content: Element = Tabs::new(self.active_view, Message::SetActiveView)
-            .push(
-                TabLabel::Text("Transactions".to_string()),
-                self.transactions_view.view(&self.item_db),
-            )
-            .push(
-                TabLabel::Text("Inventory".to_string()),
-                self.inventory_view.view(&self.item_db),
-            )
-            .text_size(20)
-            .tab_label_spacing(20)
-            .tab_bar_height(iced::Length::Shrink)
-            .into();
-
-        Modal::new(self.show_password_modal, content, || {
-            column![
-                text("poopie"),
-                button("exit").on_press(Message::ClosePasswordModal)
-            ]
-            .into()
-            //     Card::new(
-            //         Text::new("My modal"),
-            //         Text::new("This is a modal!"), //Text::new("Zombie ipsum reversus ab viral inferno, nam rick grimes malum cerebro. De carne lumbering animata corpora quaeritis. Summus brains sit​​, morbo vel maleficia? De apocalypsi gorger omero undead survivor dictum mauris. Hi mindless mortuis soulless creaturas, imo evil stalking monstra adventus resi dentevil vultus comedat cerebella viventium. Qui animated corpse, cricket bat max brucks terribilem incessu zomby. The voodoo sacerdos flesh eater, suscitat mortuos comedere carnem virus. Zonbi tattered for solum oculi eorum defunctis go lum cerebro. Nescio brains an Undead zombies. Sicut malus putrid voodoo horror. Nigh tofth eliv ingdead.")
-            //     )
-            //     .foot(
-            //         Row::new()
-            //             .spacing(10)
-            //             .padding(5)
-            //             .width(Length::Fill)
-            //             .push(
-            //                 Button::new(Text::new("Cancel").horizontal_alignment(Horizontal::Center))
-            //                     .width(Length::Fill)
-            //                     .on_press(Message::CancelButtonPressed),
-            //             )
-            //             .push(
-            //                 Button::new(Text::new("Ok").horizontal_alignment(Horizontal::Center))
-            //                     .width(Length::Fill)
-            //                     .on_press(Message::OkButtonPressed),
-            //             ),
-            //     )
-            //     .max_width(300)
-            //     //.width(Length::Shrink)
-            //     .on_close(Message::CloseModal)
-            //     .into()
-            // })
-            // .backdrop(Message::CloseModal)
-            // .on_esc(Message::CloseModal)
-            // .into()
+        let content: Element = Tabs::new(self.active_view as usize, |index_usize| {
+            Message::SetActiveView(ViewIndex::from_usize(index_usize))
         })
-        .into()
+        .push(
+            TabLabel::Text("Transactions".to_string()),
+            self.transactions_view.view(&self.item_db),
+        )
+        .push(
+            TabLabel::Text("Inventory".to_string()),
+            self.inventory_view.view(&self.item_db),
+        )
+        .push(
+            TabLabel::Text("Item Creation".to_string()),
+            self.item_creation_view.view(),
+        )
+        .text_size(20)
+        // .tab_label_spacing(20)
+        .tab_bar_height(iced::Length::Shrink)
+        .into();
+
+        let element: Element = Modal::new(self.desired_view.is_some(), content, || {
+            render_password_prompt(&self.password_input)
+        })
+        .into();
+
+        element
+        // element.explain(Color::BLACK)
     }
 
     fn should_exit(&self) -> bool {
         self.should_exit
     }
+}
+
+fn render_password_prompt<'a>(password_input: &String) -> Element<'a> {
+    column![
+        text("A Password is required"),
+        text_input("Enter Password", password_input, Message::PasswordChanged)
+            .password()
+            .on_submit(Message::ClosePasswordModal),
+        button(
+            text("Confirm")
+                .width(Length::Fill)
+                .horizontal_alignment(Horizontal::Center)
+        )
+        .on_press(Message::ClosePasswordModal)
+        .width(Length::Fill)
+    ]
+    .spacing(10)
+    .align_items(Alignment::Center)
+    .width(Length::Units(300))
+    .into()
 }

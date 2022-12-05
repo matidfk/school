@@ -145,7 +145,7 @@ impl text_input::StyleSheet for MyTheme {
     fn active(&self, _style: &Self::Style) -> text_input::Appearance {
         text_input::Appearance {
             background: Background::Color(BACKGROUND_DARKER),
-            border_radius: 1.0,
+            border_radius: BORDER_RADIUS,
             border_width: 1.0,
             border_color: Color::BLACK,
         }

@@ -1,10 +1,10 @@
 use iced::{
-    widget::{button, column, container, image, row, scrollable, text, Column},
+    widget::{button, column, container, image, row, scrollable, text, text_input, Column, Space},
     Length,
 };
 
-use crate::Element;
-use crate::{item::Item, item_db::ItemDB, utils::get_handle};
+use crate::{item::Item, item_db::ItemDB, theme::ButtonStyle, utils::get_handle, ViewIndex};
+use crate::{Element, Message};
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct InventoryView {
@@ -19,50 +19,88 @@ pub enum InventoryMessage {
 
 impl InventoryView {
     pub fn view(&self, item_db: &ItemDB) -> Element {
-        let items = column(
-            item_db
-                .items
+        const COL_COUNT: usize = 4;
+        const COL_HEIGHT: u16 = 140;
+
+        fn get_grid_item<'a>(item: &Item) -> Element<'a> {
+            button(
+                row![
+                    image(get_handle(&item.image_path))
+                        .width(Length::Units(COL_HEIGHT))
+                        .height(Length::Units(COL_HEIGHT)),
+                    text(&item.name)
+                ]
+                .width(Length::Fill),
+            )
+            .style(ButtonStyle::Item)
+            .width(Length::Fill)
+            .into()
+        }
+
+        fn get_grid_row<'a>(chunk: &[Item]) -> Element<'a> {
+            row(chunk.iter().map(|item| get_grid_item(item)).collect())
+                .width(Length::Fill)
+                .spacing(10)
+                .into()
+        }
+
+        fn get_remainder_row<'a>(rem: &[Item]) -> Element<'a> {
+            row(rem
                 .iter()
-                .filter(|item| item.name.contains(&self.input_search))
+                .map(|item| Some(item))
+                // pad with None
+                .chain((0..(COL_COUNT - rem.len())).map(|_| None))
                 .map(|item| {
-                    container(row(vec![
-                        // item image
-                        image(get_handle(&item.image_path))
-                            .height(Length::Fill)
-                            .into(),
-                        // item info
-                        column(vec![
-                            text(&item.name).into(),
-                            text(&item.image_path.as_ref().unwrap_or(&"No image".to_string()))
-                                .into(),
-                            text(&item.code).into(),
-                            text(&item.price).into(),
-                            text(&item.amount_in_stock).into(),
-                        ])
-                        .into(),
-                        // amount in stock buttons
-                        button(text("-"))
-                            // .on_press(InventoryMessage::ModifyAmountInStock(item.clone(), -1))
-                            .into(),
-                        button(text("+"))
-                            // .on_press(InventoryMessage::ModifyAmountInStock(item.clone(), 1))
-                            .into(),
-                    ]))
-                    .height(Length::Units(160))
-                    .width(Length::Fill)
-                    .padding(20)
-                    .into()
+                    if let Some(item) = item {
+                        get_grid_item(item)
+                    } else {
+                        Space::new(Length::Fill, Length::Shrink).into()
+                    }
                 })
-                .collect(),
-        );
+                .collect())
+            .spacing(10)
+            .into()
+        }
+
+        // item_db ll
+        // .items
+        // .iter()
+        // .filter(|item| item.name.contains(&self.input_search))
+        // .cloned
+
+        // ;
+
+        let i = item_db
+            .items
+            .iter()
+            .filter(|item| item.name.contains(&self.input_search))
+            .cloned()
+            .collect::<Vec<_>>();
+
+        let chunks = i.chunks_exact(COL_COUNT);
+
+        let rem = chunks.remainder();
+
+        let items: Element = column(chunks.map(|chunk| get_grid_row(chunk)).collect::<Vec<_>>())
+            .push(get_remainder_row(rem))
+            .spacing(10)
+            .into();
 
         Column::new()
-            // .push(text_input(
-            //     "Search...",
-            //     &self.input_search,
-            //     Message::Inventory(InventoryMessage::SearchChanged(v)),
-            // ))
+            .push(
+                row![
+                    text_input("Search...", &self.input_search, |v| {
+                        Message::Inventory(InventoryMessage::SearchChanged(v))
+                    }),
+                    button(text("Add New Item"))
+                        .style(ButtonStyle::Important)
+                        .on_press(Message::SetActiveView(ViewIndex::ItemCreation))
+                ]
+                .spacing(20),
+            )
             .push(scrollable(items))
+            .spacing(20)
+            .padding(20)
             .into()
     }
     pub fn update(&mut self, message: InventoryMessage, item_db: &mut ItemDB) {
@@ -73,33 +111,4 @@ impl InventoryView {
             }
         }
     }
-}
-
-fn render_item(item: &Item) -> Element {
-    container(row(vec![
-        // item image
-        image(get_handle(&item.image_path))
-            .height(Length::Fill)
-            .into(),
-        // item info
-        column(vec![
-            text(&item.name).into(),
-            text(&item.image_path.as_ref().unwrap_or(&"No image".to_string())).into(),
-            text(&item.code).into(),
-            text(&item.price).into(),
-            text(&item.amount_in_stock).into(),
-        ])
-        .into(),
-        // amount in stock buttons
-        button(text("-"))
-            // .on_press(InventoryMessage::ModifyAmountInStock(item.clone(), -1))
-            .into(),
-        button(text("+"))
-            // .on_press(InventoryMessage::ModifyAmountInStock(item.clone(), 1))
-            .into(),
-    ]))
-    .height(Length::Units(160))
-    .width(Length::Fill)
-    .padding(20)
-    .into()
 }
