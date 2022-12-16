@@ -2,13 +2,16 @@
 #![feature(iter_array_chunks)]
 #![feature(array_chunks)]
 use inventory_view::{InventoryMessage, InventoryView};
-use item_creation_view::ItemCreationView;
+use item::Item;
+use item_creation_view::{ItemCreationMessage, ItemCreationView};
+use settings_view::{SettingsMessage, SettingsView};
 use theme::MyTheme;
 
 mod inventory_view;
 mod item;
 mod item_creation_view;
 mod item_db;
+mod settings_view;
 mod theme;
 mod transaction;
 mod transactions_view;
@@ -18,7 +21,8 @@ use iced::{
     alignment::Horizontal,
     executor,
     subscription::events,
-    widget::{button, column, text, text_input, Space},
+    widget::text_input::{focus, Id},
+    widget::{button, column, text, text_input},
     window, Alignment, Application, Color, Command, Event, Length, Renderer, Settings,
     Subscription,
 };
@@ -26,13 +30,14 @@ use iced::{
 use iced_aw::{Modal, TabLabel, Tabs};
 
 use transactions_view::{TransactionsMessage, TransactionsView};
+use utils::{encrypt, get_password, notify};
 
 use crate::item_db::ItemDB;
 
 pub fn main() -> iced::Result {
     App::run(Settings {
         window: iced::window::Settings {
-            size: (1280, 720),
+            // size: (1280, 720),
             position: iced::window::Position::Centered,
             // icon: Some(Icon::from_file_data(include_bytes!("../icon.png"), None).unwrap()),
             ..Default::default()
@@ -50,12 +55,16 @@ pub type Element<'a> = iced::Element<'a, Message, Renderer<MyTheme>>;
 /// The state model of the application
 pub struct App {
     item_db: ItemDB,
+
     transactions_view: TransactionsView,
     inventory_view: InventoryView,
     item_creation_view: ItemCreationView,
+    settings_view: SettingsView,
+
     active_view: ViewIndex,
     desired_view: Option<ViewIndex>,
     password_input: String,
+    password_input_id: Id,
     should_exit: bool,
 }
 
@@ -67,8 +76,10 @@ impl Default for App {
             transactions_view: TransactionsView::default(),
             inventory_view: InventoryView::default(),
             item_creation_view: ItemCreationView::default(),
+            settings_view: SettingsView::default(),
             active_view: ViewIndex::Transactions,
             password_input: Default::default(),
+            password_input_id: Id::new("password"),
             desired_view: None,
         }
     }
@@ -80,6 +91,9 @@ pub enum Message {
 
     Transactions(TransactionsMessage),
     Inventory(InventoryMessage),
+    ItemCreation(ItemCreationMessage),
+    EditItem(Item),
+    Settings(SettingsMessage),
 
     ClosePasswordModal,
     PasswordChanged(String),
@@ -91,6 +105,7 @@ pub enum ViewIndex {
     Transactions = 0,
     Inventory = 1,
     ItemCreation = 2,
+    Settings = 3,
 }
 
 impl ViewIndex {
@@ -99,6 +114,7 @@ impl ViewIndex {
             ViewIndex::Transactions => 0,
             ViewIndex::Inventory => 1,
             ViewIndex::ItemCreation => 2,
+            ViewIndex::Settings => 3,
         }
     }
     pub fn from_usize(usize: usize) -> Self {
@@ -106,6 +122,7 @@ impl ViewIndex {
             0 => Self::Transactions,
             1 => Self::Inventory,
             2 => Self::ItemCreation,
+            3 => Self::Settings,
             _ => panic!("oh no"),
         }
     }
@@ -130,10 +147,11 @@ impl Application for App {
     }
 
     fn title(&self) -> String {
-        String::from("SchoolApp")
+        String::from("Swansea Food Centre POS Software")
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
+        let mut command = Command::none();
         match message {
             Message::EventOccured(event) => {
                 // if transactions view is open
@@ -155,31 +173,47 @@ impl Application for App {
                 self.transactions_view.update(message, &mut self.item_db)
             }
             Message::Inventory(message) => self.inventory_view.update(message, &mut self.item_db),
+            Message::ItemCreation(message) => {
+                self.item_creation_view.update(message, &mut self.item_db)
+            }
+            Message::Settings(message) => self.settings_view.update(message),
             Message::SetActiveView(new_index) => {
                 // inventory
-                const PASSWORD_PROTECTED_VIEWS: &'static [ViewIndex] = &[ViewIndex::Inventory];
+                const PASSWORD_PROTECTED_VIEWS: &'static [ViewIndex] = &[
+                    ViewIndex::Inventory,
+                    ViewIndex::ItemCreation,
+                    ViewIndex::Settings,
+                ];
 
-                if PASSWORD_PROTECTED_VIEWS.contains(&new_index) {
+                if PASSWORD_PROTECTED_VIEWS.contains(&new_index)
+                    && !PASSWORD_PROTECTED_VIEWS.contains(&self.active_view)
+                {
                     self.desired_view = Some(new_index);
+                    command = focus(self.password_input_id.clone());
                 } else {
-                    self.active_view = new_index
+                    self.active_view = new_index;
+                }
+
+                if new_index == ViewIndex::ItemCreation {
+                    self.item_creation_view.set_item(None);
                 }
             }
             Message::ClosePasswordModal => {
-                if self.password_input == "password123" {
+                if encrypt(&self.password_input) == get_password() {
                     self.active_view = self.desired_view.unwrap();
                 } else {
-                    std::process::Command::new("notify-send")
-                        .arg("Incorrect Password")
-                        .status()
-                        .expect("Failed to notify");
+                    notify("Access denied", "Incorrect Password");
                 }
                 self.desired_view = None;
                 self.password_input.clear();
             }
             Message::PasswordChanged(v) => self.password_input = v,
+            Message::EditItem(item) => {
+                self.active_view = ViewIndex::ItemCreation;
+                self.item_creation_view.set_item(Some(item));
+            }
         }
-        Command::none()
+        command
     }
 
     fn view(&self) -> Element {
@@ -198,18 +232,25 @@ impl Application for App {
             TabLabel::Text("Item Creation".to_string()),
             self.item_creation_view.view(),
         )
+        .push(
+            TabLabel::Text("Settings".to_string()),
+            self.settings_view.view(),
+        )
         .text_size(20)
         // .tab_label_spacing(20)
         .tab_bar_height(iced::Length::Shrink)
         .into();
 
         let element: Element = Modal::new(self.desired_view.is_some(), content, || {
-            render_password_prompt(&self.password_input)
+            render_password_prompt(&self.password_input, self.password_input_id.clone())
         })
         .into();
 
-        element
-        // element.explain(Color::BLACK)
+        // element
+        element.explain(Color::BLACK)
+    }
+    fn scale_factor(&self) -> f64 {
+        self.settings_view.slider_scale
     }
 
     fn should_exit(&self) -> bool {
@@ -217,10 +258,11 @@ impl Application for App {
     }
 }
 
-fn render_password_prompt<'a>(password_input: &String) -> Element<'a> {
+fn render_password_prompt<'a>(password_input: &String, id: Id) -> Element<'a> {
     column![
         text("A Password is required"),
         text_input("Enter Password", password_input, Message::PasswordChanged)
+            .id(id)
             .password()
             .on_submit(Message::ClosePasswordModal),
         button(

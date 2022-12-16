@@ -1,31 +1,86 @@
 items:
-- code: 1
+- barcode: 1
   name: Orange
   price: 90
   image_path: orange.png
   amount_in_stock: 0
-- code: 2
+- barcode: 2
   name: Apple
   price: 80
   image_path: apple.bmp
   amount_in_stock: 0
-- code: 3
+- barcode: 3
   name: Apple2
   price: 80
   image_path: apple.bmp
   amount_in_stock: 0
-- code: 4
+- barcode: 4
   name: Apple3
   price: 80
   image_path: apple.bmp
   amount_in_stock: 0
-- code: 5
+- barcode: 5
   name: Apple4
   price: 80
   image_path: apple.bmp
   amount_in_stock: 0
-- code: 6
+- barcode: 6
   name: Apple5
   price: 80
   image_path: apple.bmp
   amount_in_stock: 0
+- barcode: 25
+  name: afal
+  price: 233
+  image_path: null
+  amount_in_stock: 2
+- barcode: 9
+  name: poopoo
+  price: 89
+  image_path: apple.png
+  amount_in_stock: 1
+- barcode: 1
+  name: Orangefdssgfs
+  price: 90
+  image_path: orange.png
+  amount_in_stock: 5
+- barcode: 1
+  name: Orangefdssgfs
+  price: 90
+  image_path: orange.png
+  amount_in_stock: 5
+- barcode: 1
+  name: Orangefdssgfs
+  price: 90
+  image_path: orange.png
+  amount_in_stock: 5
+- barcode: 1
+  name: Orangefdssgfs
+  price: 90
+  image_path: orange.png
+  amount_in_stock: 5
+- barcode: 1
+  name: Orangefdssgfs
+  price: 90
+  image_path: orange.png
+  amount_in_stock: 5
+- barcode: 1
+  name: Orangefdssgfs
+  price: 90
+  image_path: orange.png
+  amount_in_stock: 5
+- barcode: 1
+  name: Orangefdssgfs
+  price: 90
+  image_path: orange.png
+  amount_in_stock: 5
+- barcode: 2
+  name: Apple
+  price: 80
+  image_path: apple.bmp
+  amount_in_stock: 5
+- barcode: 2
+  name: Appleadadada
+  price: 80
+  image_path: apple.bmp
+  amount_in_stock: 5

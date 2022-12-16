@@ -27,7 +27,7 @@ impl ItemDB {
 
     /// Gets an item from the databse given a code
     pub fn get_item(&self, code: u64) -> Option<&Item> {
-        self.items.iter().find(|item| item.code == code)
+        self.items.iter().find(|item| item.barcode == code)
         // self.items.get(&barcode)
     }
 
@@ -40,7 +40,11 @@ impl ItemDB {
 
     /// Modifies quantity of an item
     pub fn modify_quantity(&mut self, item: &Item, count: i32) {
-        let found = self.items.iter_mut().find(|i| i.code == item.code).unwrap();
+        let found = self
+            .items
+            .iter_mut()
+            .find(|i| i.barcode == item.barcode)
+            .unwrap();
 
         found.amount_in_stock = found.amount_in_stock.saturating_add_signed(count);
     }

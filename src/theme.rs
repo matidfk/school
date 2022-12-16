@@ -3,6 +3,7 @@ use iced::{
     widget::{
         button, container,
         scrollable::{self, Scroller},
+        slider::{self, Handle, HandleShape},
         text, text_input,
     },
     Background, Color, Vector,
@@ -11,6 +12,7 @@ use iced_aw::{native::modal, tabs};
 
 const BACKGROUND: Color = Color::from_rgb(1.0, 1.0, 1.0);
 const BACKGROUND_DARKER: Color = Color::from_rgb(0.9, 0.9, 0.9);
+const BACKGROUND_DARKER2: Color = Color::from_rgb(0.75, 0.75, 0.75);
 const TEXT_COLOR: Color = Color::from_rgb(0.0, 0.0, 0.0);
 const ACCENT: Color = Color::from_rgb(0.8, 0.2, 0.2);
 const BORDER_RADIUS: f32 = 5.0;
@@ -26,6 +28,30 @@ impl modal::StyleSheet for MyTheme {
         iced_aw::style::modal::Appearance {
             background: Background::Color(BACKGROUND),
         }
+    }
+}
+
+impl slider::StyleSheet for MyTheme {
+    type Style = ();
+
+    fn active(&self, style: &Self::Style) -> slider::Appearance {
+        slider::Appearance {
+            rail_colors: (TEXT_COLOR, BACKGROUND_DARKER),
+            handle: Handle {
+                shape: HandleShape::Circle { radius: 5.0 },
+                color: TEXT_COLOR,
+                border_width: 1.0,
+                border_color: TEXT_COLOR,
+            },
+        }
+    }
+
+    fn hovered(&self, style: &Self::Style) -> slider::Appearance {
+        self.active(style)
+    }
+
+    fn dragging(&self, style: &Self::Style) -> slider::Appearance {
+        self.active(style)
     }
 }
 
@@ -90,6 +116,7 @@ impl button::StyleSheet for MyTheme {
                 background: Some(Background::Color(ACCENT)),
                 ..self.active(&ButtonStyle::Item)
             },
+
             ButtonStyle::Important => button::Appearance {
                 background: Some(Background::Color(ACCENT)),
                 border_radius: BORDER_RADIUS,
@@ -104,12 +131,25 @@ impl button::StyleSheet for MyTheme {
         let active = self.active(&style);
 
         // no shadow on items and tabs
-        if style == &ButtonStyle::Item || style == &ButtonStyle::ItemSelected {
-            return active;
-        }
+        // if style == &ButtonStyle::Item || style == &ButtonStyle::ItemSelected {
+        // return active;
+        // }
+        const FAC: f32 = 0.85;
 
         button::Appearance {
-            shadow_offset: active.shadow_offset + Vector::new(0.0, 1.0),
+            // shadow_offset: active.shadow_offset + Vector::new(5.0, 5.0),
+            // darken background color
+            background: match active.background {
+                Some(old) => match old {
+                    Background::Color(c) => Some(Background::Color(Color::from_rgb(
+                        c.r * FAC,
+                        c.g * FAC,
+                        c.b * FAC,
+                    ))),
+                },
+
+                None => None,
+            },
             ..active
         }
     }
@@ -174,13 +214,13 @@ impl scrollable::StyleSheet for MyTheme {
     fn active(&self, style: &Self::Style) -> scrollable::Scrollbar {
         scrollable::Scrollbar {
             background: Some(Background::Color(BACKGROUND_DARKER)),
-            border_radius: 0.0,
-            border_width: 0.0,
+            border_radius: BORDER_RADIUS,
+            border_width: 1.0,
             border_color: Color::BLACK,
             scroller: Scroller {
                 color: ACCENT,
-                border_radius: 0.0,
-                border_width: 0.0,
+                border_radius: BORDER_RADIUS,
+                border_width: 1.0,
                 border_color: Color::BLACK,
             },
         }

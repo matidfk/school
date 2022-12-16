@@ -14,7 +14,6 @@ pub struct InventoryView {
 #[derive(Debug, Clone, PartialEq)]
 pub enum InventoryMessage {
     SearchChanged(String),
-    ModifyAmountInStock(Item, i32),
 }
 
 impl InventoryView {
@@ -33,6 +32,7 @@ impl InventoryView {
                 .width(Length::Fill),
             )
             .style(ButtonStyle::Item)
+            .on_press(Message::EditItem(item.clone()))
             .width(Length::Fill)
             .into()
         }
@@ -62,18 +62,14 @@ impl InventoryView {
             .into()
         }
 
-        // item_db ll
-        // .items
-        // .iter()
-        // .filter(|item| item.name.contains(&self.input_search))
-        // .cloned
-
-        // ;
-
         let i = item_db
             .items
             .iter()
-            .filter(|item| item.name.contains(&self.input_search))
+            .filter(|item| {
+                item.name
+                    .to_lowercase()
+                    .contains(&self.input_search.to_lowercase())
+            })
             .cloned()
             .collect::<Vec<_>>();
 
@@ -84,6 +80,8 @@ impl InventoryView {
         let items: Element = column(chunks.map(|chunk| get_grid_row(chunk)).collect::<Vec<_>>())
             .push(get_remainder_row(rem))
             .spacing(10)
+            .width(Length::Fill)
+            // .padding(20)
             .into();
 
         Column::new()
@@ -98,7 +96,13 @@ impl InventoryView {
                 ]
                 .spacing(20),
             )
-            .push(scrollable(items))
+            .push(
+                scrollable(
+                    row![items, Space::new(Length::Units(200), Length::Units(1))]
+                        .width(Length::Units(400)),
+                )
+                .scrollbar_width(5),
+            )
             .spacing(20)
             .padding(20)
             .into()
@@ -106,9 +110,6 @@ impl InventoryView {
     pub fn update(&mut self, message: InventoryMessage, item_db: &mut ItemDB) {
         match message {
             InventoryMessage::SearchChanged(value) => self.input_search = value,
-            InventoryMessage::ModifyAmountInStock(item, amount) => {
-                item_db.modify_quantity(&item, amount)
-            }
         }
     }
 }
