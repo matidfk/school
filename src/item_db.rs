@@ -13,12 +13,6 @@ pub struct ItemDB {
 }
 
 impl ItemDB {
-    /// Loads databse from JSON file given the path
-    pub fn load(path: &str) -> Self {
-        let string = fs::read_to_string(path).expect("Couldn't read file");
-        serde_json::from_str::<Self>(&string).expect("Couldn't deserialize file")
-    }
-
     /// Loads databse from YAML file given the path
     pub fn load_yaml(path: &str) -> Self {
         let string = fs::read_to_string(path).expect("Couldn't read file");
@@ -49,14 +43,9 @@ impl ItemDB {
         found.amount_in_stock = found.amount_in_stock.saturating_add_signed(count);
     }
 
-    /// Saves itself to a JSON file
-    pub fn save(&self, path: &str) {
-        // serde_json::from_str::<Self>(&string).expect("Couldn't deserialize file")
-        fs::write(
-            path,
-            serde_json::to_string_pretty::<Self>(self).expect("Couldn't serialize Item Database"),
-        )
-        .unwrap();
+    pub fn delete_item(&mut self, item: Item) {
+        self.items
+            .remove(self.items.iter().position(|i| i == &item).unwrap());
     }
 
     /// Saves itself to a YAML file

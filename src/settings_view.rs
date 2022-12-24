@@ -11,14 +11,14 @@ use crate::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct SettingsView {
     input_password: String,
-    pub slider_scale: f64,
+    pub ui_scale: f64,
 }
 
 impl Default for SettingsView {
     fn default() -> Self {
         Self {
             input_password: "".to_owned(),
-            slider_scale: 1.0,
+            ui_scale: 1.0,
         }
     }
 }
@@ -41,14 +41,17 @@ impl SettingsView {
                 button(text("Save Password"))
                     .on_press(Message::Settings(SettingsMessage::SavePassword))
             ]
+            .spacing(10)
             .width(Length::Fill),
             row![
-                slider(0.5..=2.0, self.slider_scale, |value| {
+                "UI Scale",
+                slider(0.5..=2.0, self.ui_scale, |value| {
                     Message::Settings(SettingsMessage::ScaleChanged(value))
                 })
                 .step(0.01),
-                text(self.slider_scale).width(Length::Units(60)),
-            ],
+                text(self.ui_scale).width(Length::Units(60)),
+            ]
+            .spacing(10),
         ]
         .padding(20)
         .spacing(10)
@@ -65,7 +68,7 @@ impl SettingsView {
                     &format!("Set password to {}", self.input_password),
                 )
             }
-            SettingsMessage::ScaleChanged(value) => self.slider_scale = value,
+            SettingsMessage::ScaleChanged(value) => self.ui_scale = value,
         }
     }
 }

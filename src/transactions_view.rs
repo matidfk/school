@@ -1,7 +1,7 @@
 use iced::{
     alignment::{Horizontal, Vertical},
     keyboard::KeyCode,
-    widget::{button, column, image, row, scrollable, text, Column},
+    widget::{button, column, image, row, scrollable, text, Column, Row},
     Alignment, Event, Length, Renderer,
 };
 
@@ -41,12 +41,8 @@ impl TransactionsView {
     pub fn view(&self, item_db: &ItemDB) -> Element {
         // ====================================== LEFT HALF =============================================
 
-        let left_half = column![row![
-            // quick access fruit and things
-            render_quick_item_button(item_db.items[0].clone()),
-            render_quick_item_button(item_db.items[1].clone()),
-        ]
-        .spacing(10)]
+        let left_half = column![item_db.items.iter().fold(Row::new(), |row, item| row
+            .push(render_quick_item_button(item.clone())))]
         .padding(20)
         .spacing(10);
 

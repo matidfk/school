@@ -174,7 +174,9 @@ impl Application for App {
             }
             Message::Inventory(message) => self.inventory_view.update(message, &mut self.item_db),
             Message::ItemCreation(message) => {
-                self.item_creation_view.update(message, &mut self.item_db)
+                if let Some(message) = self.item_creation_view.update(message, &mut self.item_db) {
+                    self.update(message);
+                }
             }
             Message::Settings(message) => self.settings_view.update(message),
             Message::SetActiveView(new_index) => {
@@ -217,8 +219,8 @@ impl Application for App {
     }
 
     fn view(&self) -> Element {
-        let content: Element = Tabs::new(self.active_view as usize, |index_usize| {
-            Message::SetActiveView(ViewIndex::from_usize(index_usize))
+        let content: Element = Tabs::new(self.active_view.to_usize(), |index| {
+            Message::SetActiveView(ViewIndex::from_usize(index))
         })
         .push(
             TabLabel::Text("Transactions".to_string()),
@@ -246,11 +248,11 @@ impl Application for App {
         })
         .into();
 
-        // element
-        element.explain(Color::BLACK)
+        element
+        // element.explain(Color::BLACK)
     }
     fn scale_factor(&self) -> f64 {
-        self.settings_view.slider_scale
+        self.settings_view.ui_scale
     }
 
     fn should_exit(&self) -> bool {

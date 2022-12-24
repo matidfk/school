@@ -24,6 +24,7 @@ pub struct ItemCreationView {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ItemCreationMessage {
     ImagePathChanged(String),
+    BrowseImagePath,
     NameChanged(String),
     PriceChanged(String),
     BarcodeChanged(String),
@@ -52,9 +53,13 @@ impl ItemCreationView {
                 //image
                 image(get_handle(&Some(self.input_image_path.clone()))),
                 // image path
-                text_input("Item Image Path", &self.input_image_path, |input| {
-                    Message::ItemCreation(ItemCreationMessage::ImagePathChanged(input))
-                }),
+                row![
+                    text_input("Item Image Path", &self.input_image_path, |input| {
+                        Message::ItemCreation(ItemCreationMessage::ImagePathChanged(input))
+                    }),
+                    button("Browse")
+                        .on_press(Message::ItemCreation(ItemCreationMessage::BrowseImagePath))
+                ]
             ]
             .width(Length::FillPortion(1)),
             // right side
@@ -77,7 +82,11 @@ impl ItemCreationView {
         .spacing(10)
         .into()
     }
-    pub fn update(&mut self, message: ItemCreationMessage, item_db: &mut ItemDB) {
+    pub fn update(
+        &mut self,
+        message: ItemCreationMessage,
+        item_db: &mut ItemDB,
+    ) -> Option<Message> {
         match message {
             ItemCreationMessage::ImagePathChanged(value) => self.input_image_path = value,
             ItemCreationMessage::NameChanged(value) => self.input_name = value,
@@ -99,11 +108,26 @@ impl ItemCreationView {
                             item_db.items.push(item);
                         }
                         notify("Saved Item", &self.input_name);
+                        return Some(Message::SetActiveView(crate::ViewIndex::Inventory));
                     }
                     Err(err) => notify("Failed saving item", &err.to_string()),
                 };
             }
+            ItemCreationMessage::BrowseImagePath => {
+                let file = rfd::FileDialog::new().set_directory("images").pick_file();
+
+                if let Some(file) = file {
+                    self.input_image_path = file
+                        .to_string_lossy()
+                        .to_string()
+                        .split_once("images")
+                        .unwrap()
+                        .1
+                        .to_owned();
+                }
+            }
         }
+        None
     }
 }
 fn parse_item(

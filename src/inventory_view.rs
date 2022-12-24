@@ -14,6 +14,7 @@ pub struct InventoryView {
 #[derive(Debug, Clone, PartialEq)]
 pub enum InventoryMessage {
     SearchChanged(String),
+    DeleteItem(Item),
 }
 
 impl InventoryView {
@@ -27,7 +28,12 @@ impl InventoryView {
                     image(get_handle(&item.image_path))
                         .width(Length::Units(COL_HEIGHT))
                         .height(Length::Units(COL_HEIGHT)),
-                    text(&item.name)
+                    column![
+                        text(&item.name),
+                        button("Delete").on_press(Message::Inventory(
+                            InventoryMessage::DeleteItem(item.clone())
+                        ))
+                    ]
                 ]
                 .width(Length::Fill),
             )
@@ -98,8 +104,8 @@ impl InventoryView {
             )
             .push(
                 scrollable(
-                    row![items, Space::new(Length::Units(200), Length::Units(1))]
-                        .width(Length::Units(400)),
+                    row![items, Space::new(Length::Units(15), Length::Units(1))]
+                        .width(Length::Fill),
                 )
                 .scrollbar_width(5),
             )
@@ -110,6 +116,7 @@ impl InventoryView {
     pub fn update(&mut self, message: InventoryMessage, item_db: &mut ItemDB) {
         match message {
             InventoryMessage::SearchChanged(value) => self.input_search = value,
+            InventoryMessage::DeleteItem(item) => item_db.delete_item(item),
         }
     }
 }
