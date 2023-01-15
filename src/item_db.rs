@@ -43,6 +43,7 @@ impl ItemDB {
         found.amount_in_stock = found.amount_in_stock.saturating_add_signed(count);
     }
 
+    /// Removes an item from the database
     pub fn delete_item(&mut self, item: Item) {
         self.items
             .remove(self.items.iter().position(|i| i == &item).unwrap());

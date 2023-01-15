@@ -49,7 +49,7 @@ pub fn main() -> iced::Result {
     })
 }
 
-// Aliases
+/// Convenience Type alias
 pub type Element<'a> = iced::Element<'a, Message, Renderer<MyTheme>>;
 
 /// The state model of the application
@@ -100,6 +100,7 @@ pub enum Message {
     SetActiveView(ViewIndex),
 }
 
+/// Utility enum with predefined indexes
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ViewIndex {
     Transactions = 0,
@@ -161,7 +162,7 @@ impl Application for App {
                         &mut self.item_db,
                     )
                 }
-                // upon receiving signal to close
+                // quit and save upon receiving signal to close
                 if let Event::Window(window::Event::CloseRequested) = event {
                     self.item_db.save_yaml("./item_db.yaml");
                     self.should_exit = true;
@@ -180,13 +181,13 @@ impl Application for App {
             }
             Message::Settings(message) => self.settings_view.update(message),
             Message::SetActiveView(new_index) => {
-                // inventory
                 const PASSWORD_PROTECTED_VIEWS: &'static [ViewIndex] = &[
                     ViewIndex::Inventory,
                     ViewIndex::ItemCreation,
                     ViewIndex::Settings,
                 ];
 
+                // request password only if not already on a password protected view
                 if PASSWORD_PROTECTED_VIEWS.contains(&new_index)
                     && !PASSWORD_PROTECTED_VIEWS.contains(&self.active_view)
                 {
@@ -196,11 +197,13 @@ impl Application for App {
                     self.active_view = new_index;
                 }
 
+                // make sure we're not accidentally editing the last item
                 if new_index == ViewIndex::ItemCreation {
                     self.item_creation_view.set_item(None);
                 }
             }
             Message::ClosePasswordModal => {
+                // encrypt input rather than decrypt the password to allow one-way encryption
                 if encrypt(&self.password_input) == get_password() {
                     self.active_view = self.desired_view.unwrap();
                 } else {
@@ -249,7 +252,6 @@ impl Application for App {
         .into();
 
         element
-        // element.explain(Color::BLACK)
     }
     fn scale_factor(&self) -> f64 {
         self.settings_view.ui_scale

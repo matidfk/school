@@ -28,7 +28,31 @@ pub fn format_price(input: u32) -> String {
     format!("£{0}.{1:0<2}", pounds, pence)
 }
 
-/// Helper function to notify the user
+pub fn parse_price(input: &str) -> Result<u32, ()> {
+    // if input is just pounds
+    if let Ok(parsed) = input.parse::<u32>() {
+        return Ok(parsed * 100);
+    }
+
+    // input has a decimal
+    let split = input.split_once('.');
+    match split {
+        Some((pounds, pence)) => {
+            if let Ok(pounds_parsed) = pounds.parse::<u32>() {
+                if let Ok(pence_parsed) = pence.parse::<u32>() {
+                    return Ok(pounds_parsed * 100 + pence_parsed);
+                } else {
+                    Err(())
+                }
+            } else {
+                Err(())
+            }
+        }
+        None => Err(()),
+    }
+}
+
+/// Helper function to notify the user using native notifications
 pub fn notify(title: &str, description: &str) {
     Notification::new()
         .summary(title)

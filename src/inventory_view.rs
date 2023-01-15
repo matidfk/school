@@ -68,6 +68,8 @@ impl InventoryView {
             .into()
         }
 
+        // setup grid
+
         let i = item_db
             .items
             .iter()

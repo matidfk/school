@@ -8,7 +8,7 @@ use iced::{
 use crate::{
     item::Item,
     item_db::ItemDB,
-    utils::{get_handle, notify},
+    utils::{get_handle, notify, parse_price},
 };
 use crate::{Element, Message};
 
@@ -38,7 +38,7 @@ impl ItemCreationView {
             self.input_barcode = item.barcode.to_string();
             self.input_name = item.name.clone();
             self.input_image_path = item.image_path.unwrap_or("".to_owned());
-            self.input_price = item.price.to_string();
+            self.input_price = (item.price as f32 / 100.0).to_string();
         } else {
             self.input_barcode = "".to_owned();
             self.input_name = "".to_owned();
@@ -110,7 +110,7 @@ impl ItemCreationView {
                         notify("Saved Item", &self.input_name);
                         return Some(Message::SetActiveView(crate::ViewIndex::Inventory));
                     }
-                    Err(err) => notify("Failed saving item", &err.to_string()),
+                    Err(_) => notify("Failed saving item", ""),
                 };
             }
             ItemCreationMessage::BrowseImagePath => {
@@ -135,9 +135,9 @@ fn parse_item(
     barcode: String,
     price: String,
     image_path: String,
-) -> Result<Item, ParseIntError> {
-    let barcode = barcode.parse()?;
-    let price = price.parse()?;
+) -> Result<Item, ()> {
+    let barcode = barcode.parse().map_err(|_| ())?;
+    let price = parse_price(&price)?;
 
     let image_path = if image_path.is_empty() {
         None

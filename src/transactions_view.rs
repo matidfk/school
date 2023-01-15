@@ -1,16 +1,18 @@
 use iced::{
     alignment::{Horizontal, Vertical},
     keyboard::KeyCode,
-    widget::{button, column, image, row, scrollable, text, Column, Row},
+    widget::{button, column, image, row, scrollable, text, text_input, Column, Row},
     Alignment, Event, Length, Renderer,
 };
+
+use iced_aw::Modal;
 
 use crate::{
     item::Item,
     item_db::ItemDB,
     theme::ButtonStyle,
     transaction::{Transaction, TransactionItem},
-    utils::{format_price, get_handle},
+    utils::{format_price, get_handle, parse_price},
     Message,
 };
 
@@ -22,6 +24,16 @@ pub struct TransactionsView {
     pub current_transaction: Transaction,
     pub selected_index: usize,
     pub input_code: String,
+
+    input_cash_given: String,
+    open_modal: Option<ModalType>,
+}
+
+#[derive(PartialEq, Debug, Clone)]
+enum ModalType {
+    CashOrCard,
+    CashChange,
+    CardAcceptOrDecline,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -31,6 +43,11 @@ pub enum TransactionsMessage {
     FinishTransaction,
     ModifySelectedItemQuantity(i32),
     SelectItem(Item),
+    CashSelected,
+    CardSelected,
+    PaymentAccepted,
+    PaymentDeclined,
+    CashGivenChanged(String),
 }
 
 fn map(message: TransactionsMessage) -> Message {
@@ -111,16 +128,69 @@ impl TransactionsView {
         .spacing(10)
         .align_items(Alignment::Fill);
 
-        row![
+        let content: Element = row![
             left_half.width(Length::Fill),
             right_half.width(Length::Fill)
         ]
-        .into()
+        .into();
+
+        let content = Modal::new(self.open_modal.is_some(), content, || {
+            if self.open_modal.is_none() {
+                return "unreachable".into();
+            };
+            match self.open_modal.as_ref().unwrap() {
+                ModalType::CashOrCard => column![
+                    button("Cash")
+                        .on_press(Message::Transactions(TransactionsMessage::CashSelected)),
+                    button("Card")
+                        .on_press(Message::Transactions(TransactionsMessage::CardSelected))
+                ]
+                .into(),
+                ModalType::CashChange => column![
+                    text_input("Enter cash given", &self.input_cash_given, |string| {
+                        Message::Transactions(TransactionsMessage::CashGivenChanged(string))
+                    }),
+                    if let Ok(parsed) = parse_price(&self.input_cash_given) {
+                        let price = self.current_transaction.total_price();
+                        if parsed < price {
+                            text(format!("{} more needed", format_price(price - parsed)))
+                        } else {
+                            text(format!("Change: {}", format_price(parsed - price)))
+                        }
+                    } else {
+                        text("Invalid input")
+                    },
+                    row![
+                        button("Accept")
+                            .on_press(Message::Transactions(TransactionsMessage::PaymentAccepted)),
+                        button("Decline")
+                            .on_press(Message::Transactions(TransactionsMessage::PaymentDeclined)),
+                    ]
+                ]
+                .into(),
+                ModalType::CardAcceptOrDecline => row![
+                    button("Accept")
+                        .on_press(Message::Transactions(TransactionsMessage::PaymentAccepted)),
+                    button("Decline")
+                        .on_press(Message::Transactions(TransactionsMessage::PaymentDeclined)),
+                ]
+                .into(),
+            }
+        })
+        .into();
+
+        content
+    }
+
+    fn finish_transaction(&mut self, item_db: &mut ItemDB) {
+        println!("{}", self.current_transaction.generate_receipt());
+        item_db.update_quantities_from_transaction(&self.current_transaction);
+        self.current_transaction = Transaction::default();
+        self.open_modal = None
     }
 
     pub fn update(&mut self, message: TransactionsMessage, item_db: &mut ItemDB) {
         match message {
-            // ========================== KEY PRESSED ===========================
             TransactionsMessage::EventOccured(event) => {
                 if let Event::Keyboard(event) = event {
                     match event {
@@ -159,9 +229,7 @@ impl TransactionsView {
 
             // ====================== FINISH TRANSACTION ========================
             TransactionsMessage::FinishTransaction => {
-                println!("{}", self.current_transaction.generate_receipt());
-                item_db.update_quantities_from_transaction(&self.current_transaction);
-                self.current_transaction = Transaction::default();
+                self.open_modal = Some(ModalType::CashOrCard);
             }
             // modify amount
             TransactionsMessage::ModifySelectedItemQuantity(amount) => {
@@ -192,6 +260,15 @@ impl TransactionsView {
                     self.selected_index = self.current_transaction.items.len() - 1;
                 }
             }
+            TransactionsMessage::CashSelected => self.open_modal = Some(ModalType::CashChange),
+            TransactionsMessage::CardSelected => {
+                self.open_modal = Some(ModalType::CardAcceptOrDecline)
+            }
+            TransactionsMessage::PaymentAccepted => {
+                self.finish_transaction(item_db);
+            }
+            TransactionsMessage::PaymentDeclined => self.open_modal = None,
+            TransactionsMessage::CashGivenChanged(v) => self.input_cash_given = v,
         }
     }
 }
