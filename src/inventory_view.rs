@@ -15,6 +15,7 @@ pub struct InventoryView {
 pub enum InventoryMessage {
     SearchChanged(String),
     DeleteItem(Item),
+    PrintItemsLowInStock,
 }
 
 impl InventoryView {
@@ -100,7 +101,10 @@ impl InventoryView {
                     }),
                     button(text("Add New Item"))
                         .style(ButtonStyle::Important)
-                        .on_press(Message::SetActiveView(ViewIndex::ItemCreation))
+                        .on_press(Message::SetActiveView(ViewIndex::ItemCreation)),
+                    button(text("Print low in stock list"))
+                        .style(ButtonStyle::Important)
+                        .on_press(Message::Inventory(InventoryMessage::PrintItemsLowInStock))
                 ]
                 .spacing(20),
             )
@@ -119,6 +123,16 @@ impl InventoryView {
         match message {
             InventoryMessage::SearchChanged(value) => self.input_search = value,
             InventoryMessage::DeleteItem(item) => item_db.delete_item(item),
+            InventoryMessage::PrintItemsLowInStock => {
+                println!("Items low in stock:");
+                for item in item_db
+                    .items
+                    .iter()
+                    .filter(|item| item.amount_in_stock < 20)
+                {
+                    println!("Item: {}, in stock: {}", &item.name, item.amount_in_stock);
+                }
+            }
         }
     }
 }

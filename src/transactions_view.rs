@@ -12,7 +12,7 @@ use crate::{
     item_db::ItemDB,
     theme::ButtonStyle,
     transaction::{Transaction, TransactionItem},
-    utils::{format_price, get_handle, parse_price},
+    utils::{format_price, get_handle, notify, parse_price},
     Message,
 };
 
@@ -204,19 +204,23 @@ impl TransactionsView {
                             modifiers: _,
                         } if key_code == KeyCode::Enter && !self.input_code.is_empty() => {
                             // get number in input
-                            let code = self.input_code.parse().expect("Couldn't parse number");
-                            // get corresponding item
-                            let item = item_db.get_item(code);
+                            let code = self.input_code.parse();
+                            if let Ok(code) = code {
+                                // get corresponding item
+                                let item = item_db.get_item(code);
 
-                            // if item is found
-                            if let Some(item) = item {
-                                // add to transaction
-                                self.current_transaction.add_item(item);
-                                // set as selected item
-                                self.selected_index = self.current_transaction.items.len() - 1;
+                                // if item is found
+                                if let Some(item) = item {
+                                    // add to transaction
+                                    self.current_transaction.add_item(item);
+                                    // set as selected item
+                                    self.selected_index = self.current_transaction.items.len() - 1;
+                                } else {
+                                    // print error message
+                                    notify("Invalid item", "Item with barcode couldn't be found");
+                                }
                             } else {
-                                // print error message
-                                println!("invalid item {}", self.input_code)
+                                notify("Invalid barcode", "Barcode contains invalid characters");
                             }
 
                             // clear input

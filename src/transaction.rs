@@ -79,7 +79,7 @@ impl Transaction {
         }
         let mut string = String::from("\n\n\n\n");
         string.push_str(&format!(
-            "gypsy shop              {}\n",
+            "Swansea Food Centre     {}\n",
             chrono::offset::Local::now().format("%d. %m. %H:%M:%S")
         ));
         string.push_str("========================================\n");

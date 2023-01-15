@@ -1,16 +1,36 @@
 items:
-- barcode: 1
-  name: Orange
-  price: 90
-  image_path: orange.png
-  amount_in_stock: 2
-- barcode: 1
-  name: Apple
-  price: 9000
-  image_path: /apple.png
-  amount_in_stock: 5
-- barcode: 123
-  name: peanut
-  price: 250
-  image_path: /peanut.png
-  amount_in_stock: 3
+- barcode: 131896731267
+  name: Smirnoff Vanilla vodka 70cl
+  price: 1639
+  image_path: /smirnoff_vanilla.webp
+  amount_in_stock: 23
+- barcode: 843278916321
+  name: Lay's Chilli & Lime crisps
+  price: 149
+  image_path: /lays_chilli_lime.png
+  amount_in_stock: 32
+- barcode: 312789764237
+  name: Edmal pickles jar 750ml
+  price: 179
+  image_path: /edmar_pickles_jar.jpg
+  amount_in_stock: 13
+- barcode: 312896798907
+  name: Vifon noodles chinski
+  price: 39
+  image_path: /vifon_noodles_chinski.webp
+  amount_in_stock: 45
+- barcode: 312866879987
+  name: Mila wafer
+  price: 59
+  image_path: /mila.jpg
+  amount_in_stock: 79
+- barcode: 423987986986
+  name: Kofola 2L
+  price: 159
+  image_path: /kofola_2l.png
+  amount_in_stock: 32
+- barcode: 34215241352534
+  name: Sencu kvass 1.5L
+  price: 159
+  image_path: sencu_kvas.jpeg
+  amount_in_stock: 12
