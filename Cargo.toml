@@ -7,8 +7,11 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.22"
-iced = {version = "0.5.2", features = ["image"] }
-iced_aw = { git = "https://github.com/iced-rs/iced_aw.git", features = ["tabs", "modal"], rev = "9dc1ff5" }
+iced = { version = "0.5.2", features = ["image"] }
+iced_aw = { git = "https://github.com/iced-rs/iced_aw.git", features = [
+    "tabs",
+    "modal",
+], rev = "9dc1ff5" }
 serde = { version = "1.0.145", features = ["derive"] }
 serde_json = "1.0.86"
 serde_yaml = "0.9.13"
@@ -16,7 +19,7 @@ notify-rust = "*"
 rfd = "0.10.0"
 
 [profile.dev.package.school]
-opt-level = 0 
+opt-level = "s"
 
 [profile.dev.package."*"]
-opt-level = 3
+opt-level = "s"

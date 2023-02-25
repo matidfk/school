@@ -1,5 +1,3 @@
-use std::num::ParseIntError;
-
 use iced::{
     widget::{button, column, image, row, text, text_input},
     Length,
@@ -82,6 +80,7 @@ impl ItemCreationView {
         .spacing(10)
         .into()
     }
+
     pub fn update(
         &mut self,
         message: ItemCreationMessage,
@@ -92,7 +91,9 @@ impl ItemCreationView {
             ItemCreationMessage::NameChanged(value) => self.input_name = value,
             ItemCreationMessage::PriceChanged(value) => self.input_price = value,
             ItemCreationMessage::BarcodeChanged(value) => self.input_barcode = value,
+
             ItemCreationMessage::SaveItem => {
+                // try parse the item data
                 match parse_item(
                     self.input_name.clone(),
                     self.input_barcode.clone(),
@@ -113,7 +114,9 @@ impl ItemCreationView {
                     Err(_) => notify("Failed saving item", ""),
                 };
             }
+
             ItemCreationMessage::BrowseImagePath => {
+                // open a filepicker
                 let file = rfd::FileDialog::new().set_directory("images").pick_file();
 
                 if let Some(file) = file {
@@ -130,6 +133,8 @@ impl ItemCreationView {
         None
     }
 }
+
+/// Try parse an item from strings
 fn parse_item(
     name: String,
     barcode: String,

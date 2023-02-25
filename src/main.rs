@@ -1,11 +1,7 @@
+// unstable features
 #![feature(iter_next_chunk)]
 #![feature(iter_array_chunks)]
 #![feature(array_chunks)]
-use inventory_view::{InventoryMessage, InventoryView};
-use item::Item;
-use item_creation_view::{ItemCreationMessage, ItemCreationView};
-use settings_view::{SettingsMessage, SettingsView};
-use theme::MyTheme;
 
 mod inventory_view;
 mod item;
@@ -16,6 +12,12 @@ mod theme;
 mod transaction;
 mod transactions_view;
 mod utils;
+
+use inventory_view::{InventoryMessage, InventoryView};
+use item::Item;
+use item_creation_view::{ItemCreationMessage, ItemCreationView};
+use settings_view::{SettingsMessage, SettingsView};
+use theme::MyTheme;
 
 use iced::{
     alignment::Horizontal,
@@ -30,14 +32,14 @@ use iced::{
 use iced_aw::{Modal, TabLabel, Tabs};
 
 use transactions_view::{TransactionsMessage, TransactionsView};
-use utils::{encrypt, get_password, notify};
+use utils::{encrypt, get_encrypted_password, notify};
 
 use crate::item_db::ItemDB;
 
+/// Code entry point
 pub fn main() -> iced::Result {
     App::run(Settings {
         window: iced::window::Settings {
-            // size: (1280, 720),
             position: iced::window::Position::Centered,
             // icon: Some(Icon::from_file_data(include_bytes!("../icon.png"), None).unwrap()),
             ..Default::default()
@@ -85,6 +87,7 @@ impl Default for App {
     }
 }
 
+/// The main Message type
 #[derive(Debug, Clone)]
 pub enum Message {
     EventOccured(Event),
@@ -155,7 +158,7 @@ impl Application for App {
         let mut command = Command::none();
         match message {
             Message::EventOccured(event) => {
-                // if transactions view is open
+                // if transactions view is open, send the event to it
                 if self.active_view == ViewIndex::Transactions {
                     self.transactions_view.update(
                         TransactionsMessage::EventOccured(event.clone()),
@@ -203,8 +206,9 @@ impl Application for App {
                 }
             }
             Message::ClosePasswordModal => {
-                // encrypt input rather than decrypt the password to allow one-way encryption
-                if encrypt(&self.password_input) == get_password() {
+                // check encrypted input rather than decrypt the password to allow one-way encryption for
+                // better security
+                if encrypt(&self.password_input) == get_encrypted_password() {
                     self.active_view = self.desired_view.unwrap();
                 } else {
                     notify("Access denied", "Incorrect Password");
@@ -242,7 +246,6 @@ impl Application for App {
             self.settings_view.view(),
         )
         .text_size(20)
-        // .tab_label_spacing(20)
         .tab_bar_height(iced::Length::Shrink)
         .into();
 
@@ -253,15 +256,19 @@ impl Application for App {
 
         element
     }
+
+    // The user can change the scale factor in the settings
     fn scale_factor(&self) -> f64 {
         self.settings_view.ui_scale
     }
 
+    // Handle exiting to save the database properly
     fn should_exit(&self) -> bool {
         self.should_exit
     }
 }
 
+/// Utility to render the password modal
 fn render_password_prompt<'a>(password_input: &String, id: Id) -> Element<'a> {
     column![
         text("A Password is required"),

@@ -28,7 +28,15 @@ pub fn format_price(input: u32) -> String {
     format!("£{0}.{1:0<2}", pounds, pence)
 }
 
+/// Function to parse a string to a price
+/// Parsable formats:
+/// 10
+/// 10.00
+/// £10.00
 pub fn parse_price(input: &str) -> Result<u32, ()> {
+    // remove any pound signs
+    let input = input.replace('£', "");
+
     // if input is just pounds
     if let Ok(parsed) = input.parse::<u32>() {
         return Ok(parsed * 100);
@@ -52,7 +60,7 @@ pub fn parse_price(input: &str) -> Result<u32, ()> {
     }
 }
 
-/// Helper function to notify the user using native notifications
+/// Helper function to notify the user using os native notifications
 pub fn notify(title: &str, description: &str) {
     Notification::new()
         .summary(title)
@@ -75,10 +83,12 @@ pub fn encrypt(input: &str) -> String {
         .collect::<String>()
 }
 
+/// Save a new password to the file
 pub fn set_password(input: &str) {
     write(".password", encrypt(input)).unwrap();
 }
 
-pub fn get_password() -> String {
+/// Get the password, encrypted for safety
+pub fn get_encrypted_password() -> String {
     read_to_string(".password").unwrap()
 }

@@ -1,3 +1,4 @@
+use iced::Vector;
 use iced::{
     application,
     widget::{
@@ -6,13 +7,12 @@ use iced::{
         slider::{self, Handle, HandleShape},
         text, text_input,
     },
-    Background, Color, Vector,
+    Background, Color,
 };
 use iced_aw::{native::modal, tabs};
 
 const BACKGROUND: Color = Color::from_rgb(1.0, 1.0, 1.0);
 const BACKGROUND_DARKER: Color = Color::from_rgb(0.9, 0.9, 0.9);
-const BACKGROUND_DARKER2: Color = Color::from_rgb(0.75, 0.75, 0.75);
 const TEXT_COLOR: Color = Color::from_rgb(0.0, 0.0, 0.0);
 const ACCENT: Color = Color::from_rgb(0.8, 0.2, 0.2);
 const BORDER_RADIUS: f32 = 5.0;

@@ -32,8 +32,8 @@ pub enum SettingsMessage {
 
 impl SettingsView {
     pub fn view(&self) -> Element {
-        // right side
         column![
+            // password
             row![
                 text_input("Admin Password", &self.input_password, |input| {
                     Message::Settings(SettingsMessage::PasswordChanged(input))
@@ -43,6 +43,7 @@ impl SettingsView {
             ]
             .spacing(10)
             .width(Length::Fill),
+            // ui scale
             row![
                 "UI Scale",
                 slider(0.5..=2.0, self.ui_scale, |value| {

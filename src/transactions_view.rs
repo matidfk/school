@@ -58,6 +58,7 @@ impl TransactionsView {
     pub fn view(&self, item_db: &ItemDB) -> Element {
         // ====================================== LEFT HALF =============================================
 
+        // quick add buttons
         let left_half = column![item_db.items.iter().fold(Row::new(), |row, item| row
             .push(render_quick_item_button(item.clone())))]
         .padding(20)
@@ -182,6 +183,7 @@ impl TransactionsView {
         content
     }
 
+    /// Clear the transaction, print receipt
     fn finish_transaction(&mut self, item_db: &mut ItemDB) {
         println!("{}", self.current_transaction.generate_receipt());
         item_db.update_quantities_from_transaction(&self.current_transaction);
@@ -198,7 +200,7 @@ impl TransactionsView {
                         iced::keyboard::Event::CharacterReceived(char) if char.is_numeric() => {
                             self.input_code.push(char)
                         }
-                        // if enter pressed, add item
+                        // if enter pressed, try add item
                         iced::keyboard::Event::KeyPressed {
                             key_code,
                             modifiers: _,
@@ -277,6 +279,7 @@ impl TransactionsView {
     }
 }
 
+/// Utility function
 fn render_quick_item_button<'a>(item: Item) -> Element<'a> {
     button(image(get_handle(&item.image_path)))
         .on_press(map(TransactionsMessage::AddItem(item.clone())))

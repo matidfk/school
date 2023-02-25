@@ -3,7 +3,7 @@ use std::fs;
 
 use crate::{item::Item, transaction::Transaction};
 
-// TODO: maybe load into a hashmap for performance
+// TODO: maybe load into a hashmap for better lookup performance
 
 /// A database of all `Item`s
 #[derive(Debug, Serialize, Deserialize, Default, PartialEq)]

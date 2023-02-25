@@ -70,7 +70,6 @@ impl InventoryView {
         }
 
         // setup grid
-
         let i = item_db
             .items
             .iter()
@@ -90,11 +89,11 @@ impl InventoryView {
             .push(get_remainder_row(rem))
             .spacing(10)
             .width(Length::Fill)
-            // .padding(20)
             .into();
 
         Column::new()
             .push(
+                // top bar with search etc.
                 row![
                     text_input("Search...", &self.input_search, |v| {
                         Message::Inventory(InventoryMessage::SearchChanged(v))
@@ -109,6 +108,7 @@ impl InventoryView {
                 .spacing(20),
             )
             .push(
+                // items grid
                 scrollable(
                     row![items, Space::new(Length::Units(15), Length::Units(1))]
                         .width(Length::Fill),
@@ -119,6 +119,7 @@ impl InventoryView {
             .padding(20)
             .into()
     }
+
     pub fn update(&mut self, message: InventoryMessage, item_db: &mut ItemDB) {
         match message {
             InventoryMessage::SearchChanged(value) => self.input_search = value,
